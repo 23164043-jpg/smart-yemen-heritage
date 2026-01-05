@@ -26,6 +26,7 @@ UserSettings/
 MemoryCaptures/
 *.csproj
 *.sln
+*.glb
 
 # common
 *.zip
