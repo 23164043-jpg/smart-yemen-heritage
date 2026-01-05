@@ -1,0 +1,197 @@
+{
+  "roles": [
+    {
+      "id": "role_fabfa7267468",
+      "role_name": "Admin",
+      "created_at_iso": "2025-10-26T22:27:14.893212+00:00",
+      "created_at_epoch_ms": 1761517634893
+    },
+    {
+      "id": "role_7ed0b9f40b5b",
+      "role_name": "User",
+      "created_at_iso": "2025-10-26T22:27:14.893212+00:00",
+      "created_at_epoch_ms": 1761517634893
+    },
+    {
+      "id": "role_af2ca1017163",
+      "role_name": "Researcher",
+      "created_at_iso": "2025-10-26T22:27:14.893212+00:00",
+      "created_at_epoch_ms": 1761517634893
+    }
+  ],
+  "users": [
+    {
+      "id": "user_0bf335ba8a91",
+      "full_name": "Shehab Al-Dhaifani",
+      "email": "shehab@example.com",
+      "password_hash": "pbkdf2_sha256$29000$fake_salt$fake_hash",
+      "role_id": "role_fabfa7267468",
+      "created_at_iso": "2025-10-26T22:27:14.893212+00:00",
+      "created_at_epoch_ms": 1761517634893
+    },
+    {
+      "id": "user_eba896c76662",
+      "full_name": "Ishmael Al-Yemeni",
+      "email": "ishmael@example.com",
+      "password_hash": "pbkdf2_sha256$29000$fake_salt2$fake_hash2",
+      "role_id": "role_7ed0b9f40b5b",
+      "created_at_iso": "2025-10-26T22:27:14.893212+00:00",
+      "created_at_epoch_ms": 1761517634893
+    }
+  ],
+  "content_types": [
+    {
+      "id": "ctype_f7adeafaf1f8",
+      "type_name": "Kingdom",
+      "created_at_iso": "2025-10-26T22:27:14.893212+00:00",
+      "created_at_epoch_ms": 1761517634893
+    },
+    {
+      "id": "ctype_d4d756d175a9",
+      "type_name": "Inscription",
+      "created_at_iso": "2025-10-26T22:27:14.893212+00:00",
+      "created_at_epoch_ms": 1761517634893
+    },
+    {
+      "id": "ctype_0002b36a8321",
+      "type_name": "Artifact",
+      "created_at_iso": "2025-10-26T22:27:14.893212+00:00",
+      "created_at_epoch_ms": 1761517634893
+    }
+  ],
+  "content": [
+    {
+      "id": "content_536f96dade2f",
+      "type_id": "ctype_f7adeafaf1f8",
+      "created_at_iso": "2025-10-26T22:27:14.893212+00:00",
+      "created_at_epoch_ms": 1761517634893,
+      "updated_at_iso": "2025-10-26T22:27:14.893212+00:00",
+      "updated_at_epoch_ms": 1761517634893
+    },
+    {
+      "id": "content_b9cef61dcabe",
+      "type_id": "ctype_0002b36a8321",
+      "created_at_iso": "2025-10-26T22:27:14.893212+00:00",
+      "created_at_epoch_ms": 1761517634893,
+      "updated_at_iso": "2025-10-26T22:27:14.893212+00:00",
+      "updated_at_epoch_ms": 1761517634893
+    }
+  ],
+  "content_details": [
+    {
+      "id": "detail_962c5cab33a9",
+      "content_id": "content_536f96dade2f",
+      "language_code": "ar",
+      "title": "مملكة سبأ",
+      "description": "إحدى أعظم ممالك اليمن القديم، اشتهرت بسد مأرب ونظامها الزراعي المتطور.",
+      "image_url": "https://firebasestorage.googleapis.com/v0/b/yemen_history_app.appspot.com/o/images%2Fsaba.jpg?alt=media",
+      "created_at_iso": "2025-10-26T22:27:14.893212+00:00",
+      "created_at_epoch_ms": 1761517634893
+    },
+    {
+      "id": "detail_54fa62cfc309",
+      "content_id": "content_536f96dade2f",
+      "language_code": "en",
+      "title": "Kingdom of Saba",
+      "description": "One of the greatest ancient Yemeni kingdoms, known for the Marib Dam and advanced irrigation.",
+      "image_url": "https://firebasestorage.googleapis.com/v0/b/yemen_history_app.appspot.com/o/images%2Fsaba_en.jpg?alt=media",
+      "created_at_iso": "2025-10-26T22:27:14.893212+00:00",
+      "created_at_epoch_ms": 1761517634893
+    },
+    {
+      "id": "detail_70d8e99d1d72",
+      "content_id": "content_b9cef61dcabe",
+      "language_code": "ar",
+      "title": "سد مأرب",
+      "description": "من أقدم السدود في الجزيرة العربية، يعد رمزًا للري والتنمية في اليمن القديم.",
+      "image_url": "https://firebasestorage.googleapis.com/v0/b/yemen_history_app.appspot.com/o/images%2Fmarib_dam.jpg?alt=media",
+      "created_at_iso": "2025-10-26T22:27:14.893212+00:00",
+      "created_at_epoch_ms": 1761517634893
+    },
+    {
+      "id": "detail_309d2ca2687a",
+      "content_id": "content_b9cef61dcabe",
+      "language_code": "en",
+      "title": "Marib Dam",
+      "description": "One of the oldest dams in the Arabian Peninsula, symbolizing irrigation and development in ancient Yemen.",
+      "image_url": "https://firebasestorage.googleapis.com/v0/b/yemen_history_app.appspot.com/o/images%2Fmarib_dam_en.jpg?alt=media",
+      "created_at_iso": "2025-10-26T22:27:14.893212+00:00",
+      "created_at_epoch_ms": 1761517634893
+    }
+  ],
+  "knowledge_base": [
+    {
+      "id": "kb_7e6c98154cfe",
+      "question": "من الذي بنى سد مأرب؟",
+      "answer": "بناه السبئيون في القرن الثامن قبل الميلاد.",
+      "content_id": "content_b9cef61dcabe",
+      "keywords": [
+        "سد مأرب",
+        "سبأ",
+        "تاريخ"
+      ],
+      "created_at_iso": "2025-10-26T22:27:14.893212+00:00",
+      "created_at_epoch_ms": 1761517634893
+    },
+    {
+      "id": "kb_bbd9bc6de285",
+      "question": "أين تقع مملكة سبأ؟",
+      "answer": "تقع في اليمن القديم وعاصمتها مأرب.",
+      "content_id": "content_536f96dade2f",
+      "keywords": [
+        "مملكة سبأ",
+        "مأرب",
+        "اليمن القديم"
+      ],
+      "created_at_iso": "2025-10-26T22:27:14.893212+00:00",
+      "created_at_epoch_ms": 1761517634893
+    }
+  ],
+  "ai_interactions": [
+    {
+      "id": "ai_943efb41a7c2",
+      "user_id": "user_0bf335ba8a91",
+      "question_text": "متى بُني سد مأرب؟",
+      "response_text": "التقديرات تضع بنائه في فترات مبكرة من الألفية الأولى قبل الميلاد، وتمت توسعات لاحقة.",
+      "timestamp_iso": "2025-10-26T22:27:14.893212+00:00",
+      "timestamp_epoch_ms": 1761517634893
+    }
+  ],
+  "ar_assets": [
+    {
+      "id": "asset_c75f4b0fb9dc",
+      "content_id": "content_b9cef61dcabe",
+      "model_url": "https://firebasestorage.googleapis.com/v0/b/yemen_history_app.appspot.com/o/models%2Fsdamarib.glb?alt=media",
+      "anchor_type": "marker",
+      "marker_image_url": "https://firebasestorage.googleapis.com/v0/b/yemen_history_app.appspot.com/o/markers%2Fsdamarib_marker.png?alt=media",
+      "scale": 1.0,
+      "rotation": {
+        "x": 0,
+        "y": 90,
+        "z": 0
+      },
+      "created_at_iso": "2025-10-26T22:27:14.893212+00:00",
+      "created_at_epoch_ms": 1761517634893
+    }
+  ],
+  "feedback": [
+    {
+      "id": "fb_5038e45c089f",
+      "user_id": "user_eba896c76662",
+      "content_id": "content_536f96dade2f",
+      "rating": 5,
+      "comment": "تجربة ممتازة، واجهة التطبيق جميلة!",
+      "created_at_iso": "2025-10-26T22:27:14.893212+00:00",
+      "created_at_epoch_ms": 1761517634893
+    },
+    {
+      "id": "fb_abd47367ad1a",
+      "user_id": "user_0bf335ba8a91",
+      "content_id": "content_b9cef61dcabe",
+      "rating": 4,
+      "comment": "أقترح إضافة المزيد من النقوش من حضرموت.",
+      "created_at_iso": "2025-10-26T22:27:14.893212+00:00",
+      "created_at_epoch_ms": 1761517634893
+    }
+  ]
+}

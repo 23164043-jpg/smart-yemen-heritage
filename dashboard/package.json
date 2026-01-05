@@ -1,0 +1,25 @@
+{
+  "name": "smart-yemen-dashboard",
+  "version": "1.0.0",
+  "description": "AdminJS dashboard for Smart Yemen Heritage project",
+  "type": "module",
+  "main": "admin-server.js",
+  "scripts": {
+    "start": "node admin-server.js",
+    "dev": "nodemon admin-server.js"
+  },
+  "dependencies": {
+    "@adminjs/design-system": "^4.0.1",
+    "@adminjs/express": "^6.1.1",
+    "@adminjs/mongoose": "^4.1.0",
+    "adminjs": "^7.8.1",
+    "bcryptjs": "^2.4.3",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.5",
+    "express": "^4.21.2",
+    "express-formidable": "^1.2.0",
+    "express-session": "^1.18.0",
+    "mongoose": "^8.20.1",
+    "nodemon": "^3.1.11"
+  }
+}

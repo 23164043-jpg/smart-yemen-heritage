@@ -1,0 +1,38 @@
+
+# macOS
+.DS_Store
+
+# Python
+__pycache__/
+*.pyc
+.env
+env/
+
+# Flutter / Dart
+.dart_tool/
+.packages
+build/
+.idea/
+.vscode/
+
+# Unity
+[Ll]ibrary/
+Temp/
+Obj/
+Build/
+Builds/
+Logs/
+UserSettings/
+MemoryCaptures/
+*.csproj
+*.sln
+
+# common
+*.zip
+*.apk
+*.aab
+
+node_modules/
+.env
+dist/
+build/

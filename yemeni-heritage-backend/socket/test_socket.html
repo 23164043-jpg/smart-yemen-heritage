@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <title>Socket Test</title>
+</head>
+<body>
+  افتح الـ Console لترى النتائج
+
+  <script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
+  <script>
+    const socket = io("http://localhost:5000");
+
+    socket.on("connect", () => {
+      console.log("✅ connected to socket:", socket.id);
+
+      socket.emit("ask_question", { 
+        userId: socket.id, 
+        question: "ما تاريخ هذا الأثر؟" 
+      });
+    });
+
+    socket.on("answer", (data) => {
+      console.log("✅ Received answer:", data);
+    });
+  </script>
+</body>
+</html>

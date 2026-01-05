@@ -1,0 +1,38 @@
+{
+  "name": "smart-yemen-encyclopedia-backend",
+  "version": "1.0.0",
+  "description": "Backend for Smart Yemen Encyclopedia (Node.js, Express, MongoDB)",
+  "main": "server.js",
+  "scripts": {
+    "start": "nodemon server.js",
+    "start:prod": "node server.js",
+    "admin": "node admin-dashboard/admin-server.js",
+    "admin:dev": "nodemon admin-dashboard/admin-server.js"
+  },
+  "keywords": [],
+  "author": "شهاب",
+  "license": "MIT",
+  "dependencies": {
+    "@adminjs/express": "^6.1.1",
+    "@adminjs/mongoose": "^3.0.0",
+    "@google/genai": "^1.31.0",
+    "adminjs": "^7.8.17",
+    "axios": "^1.13.2",
+    "bcryptjs": "^2.4.3",
+    "cors": "^2.8.5",
+    "dotenv": "^16.0.3",
+    "express": "^4.18.2",
+    "express-validator": "^6.14.3",
+    "jsonwebtoken": "^9.0.0",
+    "mongoose": "^7.0.4",
+    "morgan": "^1.10.0",
+    "multer": "^2.0.2",
+    "python-shell": "^5.0.0",
+    "swagger-jsdoc": "^6.2.8",
+    "swagger-ui-express": "^5.0.1",
+    "tesseract.js": "^6.0.1"
+  },
+  "devDependencies": {
+    "nodemon": "^2.0.22"
+  }
+}
