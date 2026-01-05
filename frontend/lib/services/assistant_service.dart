@@ -6,11 +6,11 @@ import 'package:flutter/foundation.dart' show kIsWeb;
 class AssistantService {
   static String get baseUrl {
     if (kIsWeb) {
-      return "http://localhost:5000/api/ai";
+      return "http://192.168.8.134:5000/api/ai";
     } else if (Platform.isAndroid) {
-      return "http://10.228.82.230:5000/api/ai";
+      return "http://192.168.8.134:5000/api/ai";
     } else {
-      return "http://localhost:5000/api/ai";
+      return "http://192.168.8.134:5000/api/ai";
     }
   }
 

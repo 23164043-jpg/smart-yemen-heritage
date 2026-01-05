@@ -28,7 +28,7 @@ class _KingdomsScreenState extends State<KingdomsScreen> {
 
   String _resolveImageUrl(String url) {
     // دعم Android Device
-    const String baseUrl = "http://10.228.82.230:5000";
+    const String baseUrl = "http://192.168.8.134:5000";
     if (url.startsWith('/uploads')) return baseUrl + url;
     return url;
   }

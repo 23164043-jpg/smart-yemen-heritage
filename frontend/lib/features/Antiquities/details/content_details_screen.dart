@@ -56,7 +56,7 @@ class _ContentDetailsScreenState extends State<ContentDetailsScreen> {
   // 💡 دالة مساعدة لتصحيح رابط الصورة
   String _resolveImageUrl(String url) {
     // عنوان السيرفر الفعلي
-    const String baseUrl = "http://10.228.82.230:5000";
+    const String baseUrl = "http://192.168.8.134:5000";
     
     // إذا كان الرابط يبدأ بـ /uploads
     if (url.startsWith('/uploads')) {

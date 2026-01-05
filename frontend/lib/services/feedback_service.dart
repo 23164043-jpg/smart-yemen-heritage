@@ -10,11 +10,11 @@ import 'auth_service.dart'; // 💡 استيراد AuthService
 class FeedbackService {
   static String get baseUrl {
     if (kIsWeb) {
-      return "http://localhost:5000/api/feedback";
+      return "http://192.168.8.134:5000/api/feedback";
     } else if (Platform.isAndroid) {
-      return "http://10.228.82.230:5000/api/feedback";
+      return "http://192.168.8.134:5000/api/feedback";
     } else {
-      return "http://localhost:5000/api/feedback";
+      return "http://192.168.8.134:5000/api/feedback";
     }
   }
 
