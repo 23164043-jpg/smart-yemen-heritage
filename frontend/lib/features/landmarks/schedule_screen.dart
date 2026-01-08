@@ -35,7 +35,7 @@ class _LandmarksScreenState extends State<LandmarksScreen> {
   // لدالة تصحيح روابط الصور
   String _resolveImageUrl(String url) {
     // دعم Android Device
-    const String baseUrl = "http://192.168.8.134:5000";
+    const String baseUrl = "http://192.168.200.230:5000";
     if (url.startsWith('/uploads')) return baseUrl + url;
     return url;
   }

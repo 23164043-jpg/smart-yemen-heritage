@@ -1,4 +1,4 @@
-import AdminJS, { ComponentLoader } from 'adminjs'
+import AdminJS from 'adminjs'
 import * as AdminJSExpress from '@adminjs/express'
 import * as AdminJSMongoose from '@adminjs/mongoose'
 import dotenv from 'dotenv'
@@ -13,14 +13,6 @@ const __dirname = path.dirname(__filename)
 
 const require = createRequire(import.meta.url)
 const mongooseBackend = require('../backend/node_modules/mongoose')
-
-const componentLoader = new ComponentLoader()
-
-// 🚨 التصحيح الحاسم للمسار: 
-// نستخدم المسار النسبي البسيط الذي يضمن أن bundler الخاص بـ AdminJS يعمل بشكل صحيح.
-const componentPath = path.resolve(__dirname, 'components', 'Dashboard.js'); // 👈 التصحيح الأقوىconst componentPath = path.resolve(__dirname, 'components', 'Dashboard.js'); // 👈 التصحيح الأقوى
-// تسجيل المُكوّن. القيمة المرجعة لا يجب استخدامها.
-componentLoader.add('Dashboard', componentPath) 
 
 AdminJSMongoose.Resource.validate = AdminJSMongoose.validate
 AdminJS.registerAdapter(AdminJSMongoose.default || AdminJSMongoose)
@@ -50,9 +42,8 @@ import Notification from '../backend/models/Notification.js'
 import Admin from '../backend/models/Admin.js'
 
 const adminOptions = {
-  rootPath: '/admin',
-  componentLoader,
-  resources: [
+  rootPath: '/admin',
+  resources: [
     { resource: User, options: { navigation: { name: 'الإدارة', icon: 'User' } } },
     { resource: Admin, options: { navigation: { name: 'الإدارة', icon: 'Key' } } },
     { resource: Content, options: { navigation: { name: 'المحتوى', icon: 'FileText' } } },
@@ -64,19 +55,10 @@ const adminOptions = {
     { resource: Feedback, options: { navigation: { name: 'التسويق', icon: 'Star' } } },
     { resource: Notification, options: { navigation: { name: 'التسويق' } } },
   ],
-  branding: {
-    companyName: 'تراث اليمن الذكي',
-    logo: false,
-  },
-  dashboard: {
-    component: 'Dashboard', // 👈 التأكد من تمرير اسم المُكوّن كـ String
-    handler: async () => {
-      const usersCount = await User.countDocuments()
-      const contentCount = await Content.countDocuments()
-      const feedbackCount = await Feedback.countDocuments()
-      return { usersCount, contentCount, feedbackCount }
-    }
-  }
+  branding: {
+    companyName: 'تراث اليمن الذكي',
+    logo: false,
+  },
 }
 
 const adminJs = new AdminJS(adminOptions)

@@ -156,7 +156,7 @@ class _ContentDetailsScreenState extends State<ContentDetailsScreen>
 
   // =================== دالة تصحيح رابط الصورة ===================
   String _resolveImageUrl(String url) {
-    const String baseUrl = "http://192.168.8.134:5000";
+    const String baseUrl = "http://192.168.200.230:5000";
     if (url.startsWith('/uploads')) {
       return baseUrl + url;
     }

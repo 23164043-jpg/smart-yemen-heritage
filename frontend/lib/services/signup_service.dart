@@ -6,11 +6,11 @@ import 'package:flutter/foundation.dart' show kIsWeb;
 class SignupService {
   static String get baseUrl {
     if (kIsWeb) {
-      return "http://192.168.8.134:5000/api/users/register";
+      return "http://192.168.200.230:5000/api/users/register";
     } else if (Platform.isAndroid) {
-      return "http://192.168.8.134:5000/api/users/register";
+      return "http://192.168.200.230:5000/api/users/register";
     } else {
-      return "http://192.168.8.134:5000/api/users/register";
+      return "http://192.168.200.230:5000/api/users/register";
     }
   }
 

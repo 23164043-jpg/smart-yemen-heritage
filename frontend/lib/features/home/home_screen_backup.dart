@@ -5,6 +5,7 @@ import 'package:frontend/features/landmarks/schedule_screen.dart';
 import '../Antiquities/AntiquitiesScreen.dart';
 import '../ExtinctSites/ExtinctSitesScreen.dart';
 import '../search/search_screen.dart';
+import '../ar/ar_view_screen.dart';
 import '../../models/content_model.dart';
 import '../../services/content_service.dart';
 import '../Landmarks/details/content_details_screen.dart';
@@ -19,43 +20,26 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  int _selectedNavIndex = 0;
-  int _selectedCategoryIndex = 0;
-
-  final Color primary = const Color(0xFFD4A017); // العقيق اليمني
+  final Color primary = const Color(0xFFD4A017);
   final Color landmarksColor = const Color(0xFF2E7D32);
   final Color kingdomsColor = const Color(0xFFB8860B);
   final Color antiquitiesColor = const Color(0xFF696969);
   final Color extinctColor = const Color(0xFF8B4513);
 
-  final List<String> categories = ["الكل", "معالم", "ممالك", "آثار", "مندثرة"];
-
-  // البيانات الديناميكية
-  bool _isLoadingContent = false;
-  List<Content> _dynamicContents = [];
-
-  List<Map<String, String>> allPlaces = [
-    {
-      "title": "باب اليمن",
-      "location": "صنعاء القديمة",
-      "image": "assets/images/bab_yemen1.jpg"
-    },
-    {
-      "title": "دار الحجر",
-      "location": "وادي ظهر",
-      "image": "assets/images/place2.jpg"
-    },
-    {
-      "title": "شبام حضرموت",
-      "location": "حضرموت",
-      "image": "assets/images/place1.jpg"
-    },
-    {
-      "title": "جبل صبر",
-      "location": "محافظة تعز",
-      "image": "assets/images/place2.jpg"
-    },
+  final List<String> sliderImages = [
+    "assets/images/place1.jpg",
+    "assets/images/bab_yemen1.jpg",
+    "assets/images/place2.jpg",
   ];
+
+  int _currentPage = 0;
+
+  // البيانات الديناميكية الموسوعية (عدة عناصر من كل نوع)
+  bool _isLoading = true;
+  List<Content> _landmarks = [];
+  List<Content> _kingdoms = [];
+  List<Content> _antiquities = [];
+  List<Content> _extinctSites = [];
 
   List<Map<String, String>> filteredPlaces = [];
   final List<String> sliderImages = [
@@ -70,35 +54,6 @@ class _HomeScreenState extends State<HomeScreen> {
   void initState() {
     super.initState();
     filteredPlaces = List.from(allPlaces);
-    _loadDynamicContent();
-  }
-
-  // جلب المحتوى الديناميكي من Backend
-  Future<void> _loadDynamicContent() async {
-    setState(() => _isLoadingContent = true);
-    try {
-      final categoryName = categories[_selectedCategoryIndex];
-      String? type;
-
-      if (categoryName == "معالم")
-        type = "معالم";
-      else if (categoryName == "ممالك")
-        type = "ممالك";
-      else if (categoryName == "آثار")
-        type = "آثار";
-      else if (categoryName == "مندثرة") type = "المواقع المندثرة";
-
-      if (type != null) {
-        _dynamicContents = await ContentService.fetchContents(type: type);
-      } else {
-        // جلب كل المحتوى
-        _dynamicContents = [];
-      }
-    } catch (e) {
-      debugPrint('❌ خطأ في تحميل المحتوى: $e');
-      _dynamicContents = [];
-    }
-    setState(() => _isLoadingContent = false);
   }
 
   //-------------- Drawer navigation ----------------
@@ -138,7 +93,6 @@ class _HomeScreenState extends State<HomeScreen> {
   //-------------- Category Tap ----------------
   void _onCategorySelected(int index) {
     setState(() => _selectedCategoryIndex = index);
-    _loadDynamicContent();
 
     final categoryName = categories[index];
 
@@ -151,9 +105,6 @@ class _HomeScreenState extends State<HomeScreen> {
     } else if (categoryName == "آثار") {
       Navigator.push(context,
           MaterialPageRoute(builder: (_) => const AntiquitiesScreen()));
-    } else if (categoryName == "مندثرة") {
-      Navigator.push(context,
-          MaterialPageRoute(builder: (_) => const ExtinctSitesScreen()));
     }
   }
 
@@ -244,17 +195,7 @@ class _HomeScreenState extends State<HomeScreen> {
           const SizedBox(height: 25),
           _buildCategories(),
           const SizedBox(height: 20),
-          // عرض المحتوى الديناميكي أو الثابت
-          _isLoadingContent
-              ? Center(
-                  child: Padding(
-                    padding: const EdgeInsets.all(40),
-                    child: CircularProgressIndicator(color: primary),
-                  ),
-                )
-              : _dynamicContents.isNotEmpty
-                  ? _buildDynamicContent()
-                  : _buildPlacesGrid(),
+          _buildPlacesGrid(),
         ],
       ),
     );
@@ -480,15 +421,6 @@ class _HomeScreenState extends State<HomeScreen> {
                           builder: (_) => const AntiquitiesScreen()));
                 }),
             _buildDrawerItem(
-                icon: Icons.location_off,
-                label: "المواقع المندثرة",
-                onTap: () {
-                  Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                          builder: (_) => const ExtinctSitesScreen()));
-                }),
-            _buildDrawerItem(
                 icon: Icons.favorite,
                 label: "المفضلة",
                 onTap: () {
@@ -515,153 +447,6 @@ class _HomeScreenState extends State<HomeScreen> {
           ],
         ),
       ),
-    );
-  }
-
-  // عرض المحتوى الديناميكي من Backend
-  Widget _buildDynamicContent() {
-    return GridView.builder(
-      shrinkWrap: true,
-      physics: const NeverScrollableScrollPhysics(),
-      padding: const EdgeInsets.symmetric(horizontal: 0),
-      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: 2,
-        crossAxisSpacing: 10,
-        mainAxisSpacing: 10,
-        childAspectRatio: 0.75,
-      ),
-      itemCount: _dynamicContents.length,
-      itemBuilder: (context, index) {
-        final content = _dynamicContents[index];
-        Color cardColor = primary;
-
-        // تحديد اللون بناءً على الفئة
-        final categoryName = categories[_selectedCategoryIndex];
-        if (categoryName == "معالم")
-          cardColor = landmarksColor;
-        else if (categoryName == "ممالك")
-          cardColor = kingdomsColor;
-        else if (categoryName == "آثار")
-          cardColor = antiquitiesColor;
-        else if (categoryName == "مندثرة") cardColor = extinctColor;
-
-        return GestureDetector(
-          onTap: () {
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (_) => ContentDetailsScreen(
-                  contentId: content.id,
-                  latitude: content.latitude,
-                  longitude: content.longitude,
-                  address: content.address,
-                ),
-              ),
-            );
-          },
-          child: Card(
-            elevation: 5,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(15),
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                Expanded(
-                  flex: 3,
-                  child: ClipRRect(
-                    borderRadius: const BorderRadius.vertical(
-                      top: Radius.circular(15),
-                    ),
-                    child: content.imageUrl != null
-                        ? Image.network(
-                            content.imageUrl!,
-                            fit: BoxFit.cover,
-                            errorBuilder: (_, __, ___) => Container(
-                              color: Colors.grey[300],
-                              child: Icon(
-                                Icons.image_not_supported,
-                                size: 50,
-                                color: Colors.grey[600],
-                              ),
-                            ),
-                          )
-                        : Container(
-                            color: Colors.grey[300],
-                            child: Icon(
-                              Icons.photo,
-                              size: 50,
-                              color: Colors.grey[600],
-                            ),
-                          ),
-                  ),
-                ),
-                Expanded(
-                  flex: 2,
-                  child: Container(
-                    padding: const EdgeInsets.all(8),
-                    decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        colors: [
-                          cardColor.withOpacity(0.1),
-                          Colors.white,
-                        ],
-                        begin: Alignment.topCenter,
-                        end: Alignment.bottomCenter,
-                      ),
-                      borderRadius: const BorderRadius.vertical(
-                        bottom: Radius.circular(15),
-                      ),
-                    ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.end,
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Text(
-                          content.title,
-                          textAlign: TextAlign.right,
-                          style: TextStyle(
-                            fontSize: 14,
-                            fontWeight: FontWeight.bold,
-                            color: cardColor,
-                          ),
-                          maxLines: 2,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                        const SizedBox(height: 4),
-                        if (content.address != null)
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.end,
-                            children: [
-                              Flexible(
-                                child: Text(
-                                  content.address!,
-                                  textAlign: TextAlign.right,
-                                  style: TextStyle(
-                                    fontSize: 11,
-                                    color: Colors.grey[600],
-                                  ),
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
-                                ),
-                              ),
-                              const SizedBox(width: 4),
-                              Icon(
-                                Icons.location_on,
-                                size: 14,
-                                color: cardColor,
-                              ),
-                            ],
-                          ),
-                      ],
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        );
-      },
     );
   }
 }
