@@ -8,11 +8,11 @@ class ContentDetailsService {
   // دعم جميع المنصات
   static String get baseUrl {
     if (kIsWeb) {
-      return "http://192.168.200.230:5000/api/content-details/by-content/";
+      return "http://192.168.34.230:5000/api/content-details/by-content/";
     } else if (Platform.isAndroid) {
-      return "http://192.168.200.230:5000/api/content-details/by-content/";
+      return "http://192.168.34.230:5000/api/content-details/by-content/";
     } else {
-      return "http://192.168.200.230:5000/api/content-details/by-content/";
+      return "http://192.168.34.230:5000/api/content-details/by-content/";
     }
   }
 
@@ -22,7 +22,7 @@ class ContentDetailsService {
       final url = Uri.parse('$baseUrl$contentId');
       print('ℹ️ ContentDetailsService: جلب البيانات من: $url');
 
-      final response = await http.get(url).timeout(const Duration(seconds: 10));
+      final response = await http.get(url).timeout(const Duration(seconds: 30));
 
       if (response.statusCode == 200) {
         final List data = json.decode(response.body);

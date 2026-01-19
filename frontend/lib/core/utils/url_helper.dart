@@ -7,11 +7,11 @@ class UrlHelper {
   // Base URL للصور والملفات
   static String get baseUrl {
     if (kIsWeb) {
-      return "http://192.168.8.134:5000";
+      return "http://192.168.34.230:5000";
     } else if (Platform.isAndroid) {
-      return "http://192.168.8.134:5000";
+      return "http://192.168.34.230:5000";
     } else {
-      return "http://192.168.8.134:5000";
+      return "http://192.168.34.230:5000";
     }
   }
 
@@ -21,21 +21,33 @@ class UrlHelper {
       return '';
     }
 
-    // إذا كان الرابط يحتوي على 10.0.2.2 (عنوان المحاكي)
-    if (url.contains('10.0.2.2')) {
-      return url.replaceAll('http://10.0.2.2:5000', baseUrl);
+    // تصحيح أي IP قديم إلى الـ IP الحالي
+    String fixedUrl = url;
+    
+    // قائمة بالـ IPs القديمة التي يجب استبدالها
+    final oldIps = [
+      'http://10.0.2.2:5000',
+      'http://192.168.8.134:5000',
+      'http://192.168.200.230:5000',
+      'http://localhost:5000',
+      'http://10.0.2.2',
+      'http://192.168.8.134',
+    ];
+    
+    for (var oldIp in oldIps) {
+      if (fixedUrl.contains(oldIp)) {
+        fixedUrl = fixedUrl.replaceAll(oldIp, baseUrl);
+        print('🔧 UrlHelper: تم تصحيح الرابط من $oldIp إلى $baseUrl');
+        break;
+      }
     }
 
     // إذا كان الرابط يبدأ بـ /uploads
-    if (url.startsWith('/uploads')) {
-      return '$baseUrl$url';
+    if (fixedUrl.startsWith('/uploads')) {
+      fixedUrl = '$baseUrl$fixedUrl';
+      print('🔧 UrlHelper: إضافة baseUrl للرابط النسبي');
     }
 
-    // إذا كان الرابط يحتوي على localhost
-    if (url.contains('localhost')) {
-      return url.replaceAll('http://192.168.8.134:5000', baseUrl);
-    }
-
-    return url;
+    return fixedUrl;
   }
 }

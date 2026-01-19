@@ -10,11 +10,11 @@ class ContentService {
   // دعم جميع المنصات
   static String get baseUrl {
     if (kIsWeb) {
-      return "http://192.168.200.230:5000/api";
+      return "http://192.168.34.230:5000/api";
     } else if (Platform.isAndroid) {
-      return "http://192.168.200.230:5000/api";
+      return "http://192.168.34.230:5000/api";
     } else {
-      return "http://192.168.200.230:5000/api";
+      return "http://192.168.34.230:5000/api";
     }
   }
 

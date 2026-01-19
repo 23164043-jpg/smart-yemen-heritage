@@ -13,6 +13,7 @@ import 'features/favorites/favorites_screen.dart';
 import 'features/profile/profile_screen.dart';
 import 'features/landmarks/schedule_screen.dart';
 import 'features/Kingdoms/schedule2_screen.dart';
+import 'features/navigation/main_navigation_screen.dart';
 
 import 'core/providers/settings_provider.dart';
 
@@ -56,7 +57,8 @@ class AppRoot extends StatelessWidget {
             '/signup': (c) => const SignupScreen(),
             '/forgot_password': (c) => const ForgotPasswordScreen(),
             '/verify': (c) => const VerificationScreen(),
-            '/home': (c) => const HomeScreen(userName: ''),
+            '/home': (c) => const MainNavigationScreen(userName: ''),
+            '/main': (c) => const MainNavigationScreen(userName: ''),
             '/schedule': (c) => const LandmarksScreen(),
             '/schedule2': (c) => const KingdomsScreen(),
             '/favorites': (c) => const FavoritesScreen(),
