@@ -10,11 +10,11 @@ class ContentService {
   // دعم جميع المنصات
   static String get baseUrl {
     if (kIsWeb) {
-      return "http://192.168.34.230:5000/api";
+      return "http://192.168.43.34:5000/api";
     } else if (Platform.isAndroid) {
-      return "http://192.168.34.230:5000/api";
+      return "http://192.168.43.34:5000/api";
     } else {
-      return "http://192.168.34.230:5000/api";
+      return "http://192.168.43.34:5000/api";
     }
   }
 
@@ -26,7 +26,6 @@ class ContentService {
 
       // 2. إذا كان نوع المحتوى مُمررًا، أضف الـ Query Parameter
       if (type != null && type.isNotEmpty) {
-        // بناء رابط مثل: http://192.168.8.134:5000/api/content?type=معالم
         url = "$url?type=$type";
       }
 

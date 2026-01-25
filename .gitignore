@@ -37,3 +37,7 @@ node_modules/
 .env
 dist/
 build/
+
+# Firebase credentials (sensitive)
+backend/config/firebaseAdmin.json
+frontend/android/app/google-services.json

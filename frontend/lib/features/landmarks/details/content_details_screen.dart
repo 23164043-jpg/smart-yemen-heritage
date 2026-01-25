@@ -15,6 +15,8 @@ import '../../../services/auth_service.dart';
 // استيراد الشاشات الأخرى
 import '../../ar/ar_view_screen.dart';
 import '../../assistant/smart_assistant_screen.dart';
+import '../../../models/service_model.dart';
+import '../../../services/service_service.dart';
 
 // ═══════════════════════════════════════════════════════════════════════════
 // ═══════════════════ تعريف الألوان والثوابت ═══════════════════════════════
@@ -245,19 +247,22 @@ class _ContentDetailsScreenState extends State<ContentDetailsScreen>
     }
     if (mounted) setState(() => _isSpeaking = false);
   }
+// =================== دالة تصحيح رابط الصورة ===================
+String _resolveImageUrl(String url) {
+  const String baseUrl = "http://192.168.43.34:5000";
 
-  // =================== دالة تصحيح رابط الصورة ===================
-  String _resolveImageUrl(String url) {
-    const String baseUrl = "http://192.168.34.230:5000";
-    if (url.startsWith('/uploads')) {
-      return baseUrl + url;
-    }
-    if (url.contains('10.0.2.2:5000') || url.contains('localhost:5000')) {
-      final uri = Uri.parse(url);
-      return '$baseUrl${uri.path}';
-    }
-    return url;
+  if (url.startsWith('/uploads')) {
+    return baseUrl + url;
   }
+
+  if (url.contains('10.0.2.2:5000') || url.contains('localhost:5000')) {
+    final uri = Uri.parse(url);
+    return '$baseUrl${uri.path}';
+  }
+
+  return url;
+}
+
 
   // =================== تشخيص التوكن ===================
   void _checkToken() async {
@@ -1683,11 +1688,12 @@ ${_currentItemDetails!.description.length > 200 ? '${_currentItemDetails!.descri
               labelStyle:
                   const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
               indicatorSize: TabBarIndicatorSize.tab,
-              tabs: const [
-                Tab(text: 'التاريخ'),
-                Tab(text: 'الموقع'),
-                Tab(text: 'معالم مشابهة'),
-              ],
+                          tabs: const [
+              Tab(text: 'التاريخ'),
+              Tab(text: 'الخدمات المتاحة'),
+              Tab(text: 'معالم مشابهة'),
+            ],
+
             ),
           ),
 
@@ -1696,11 +1702,12 @@ ${_currentItemDetails!.description.length > 200 ? '${_currentItemDetails!.descri
             height: 420,
             child: TabBarView(
               controller: _tabController,
-              children: [
-                _buildTimelineTab(),
-                _buildMapTab(item),
-                _buildRelatedTab(),
-              ],
+             children: [
+  _buildTimelineTab(),
+  _buildServicesTab(), // ✅ جديد
+  _buildRelatedTab(),
+],
+
             ),
           ),
         ],
@@ -1840,83 +1847,104 @@ ${_currentItemDetails!.description.length > 200 ? '${_currentItemDetails!.descri
   }
 
   // ═══════════════════════════════════════════════════════════════════════════
-  // ═══════════════════ Map Tab ═══════════════════════════════════════════════
+  // ═══════════════════ Services Tab ═══════════════════════════════════════════════
   // ═══════════════════════════════════════════════════════════════════════════
+Widget _buildServicesTab() {
+  return FutureBuilder<List<ServiceModel>>(
+    future: ServiceService.fetchByContent(widget.contentId),
+    builder: (context, snapshot) {
+      if (snapshot.connectionState == ConnectionState.waiting) {
+        return const Center(child: CircularProgressIndicator());
+      }
 
-  Widget _buildMapTab(ContentDetails item) {
-    if (item.latitude == null || item.longitude == null) {
-      return Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Container(
-              padding: const EdgeInsets.all(20),
-              decoration: BoxDecoration(
-                color: Colors.grey.shade100,
-                shape: BoxShape.circle,
-              ),
-              child:
-                  Icon(Icons.location_off, size: 48, color: Colors.grey[400]),
-            ),
-            const SizedBox(height: 16),
-            const Text(
-              'لا تتوفر بيانات الموقع لهذا المعلم',
-              style: TextStyle(color: _textSecondary, fontSize: 16),
-            ),
-          ],
-        ),
-      );
-    }
+      if (snapshot.hasError) {
+        return const Center(child: Text('فشل تحميل الخدمات'));
+      }
 
-    final LatLng location = LatLng(item.latitude!, item.longitude!);
+      final services = snapshot.data ?? [];
 
-    return Container(
-      padding: const EdgeInsets.all(20),
-      child: Column(
-        children: [
-          Expanded(
-            child: ClipRRect(
+      if (services.isEmpty) {
+        return Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: const [
+              Icon(Icons.miscellaneous_services,
+                  size: 64, color: Colors.grey),
+              SizedBox(height: 12),
+              Text('لا توجد خدمات متاحة حالياً',
+                  style: TextStyle(color: Colors.grey)),
+            ],
+          ),
+        );
+      }
+
+      return ListView.builder(
+        padding: const EdgeInsets.all(16),
+        itemCount: services.length,
+        itemBuilder: (context, index) {
+          final service = services[index];
+
+          return Container(
+            margin: const EdgeInsets.only(bottom: 16),
+            decoration: BoxDecoration(
+              color: Colors.white,
               borderRadius: BorderRadius.circular(16),
-              child: GoogleMap(
-                initialCameraPosition:
-                    CameraPosition(target: location, zoom: 15),
-                markers: {
-                  Marker(
-                    markerId: const MarkerId('landmark_location'),
-                    position: location,
-                    infoWindow: InfoWindow(title: item.title),
-                    icon: BitmapDescriptor.defaultMarkerWithHue(
-                        BitmapDescriptor.hueOrange),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.05),
+                  blurRadius: 10,
+                ),
+              ],
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // صورة الخدمة
+                if (service.images.isNotEmpty)
+                  ClipRRect(
+                    borderRadius:
+                        const BorderRadius.vertical(top: Radius.circular(16)),
+                    child: Image.network(
+                      service.images.first,
+                      height: 160,
+                      width: double.infinity,
+                      fit: BoxFit.cover,
+                      errorBuilder: (_, __, ___) =>
+                          Container(height: 160, color: Colors.grey[200]),
+                    ),
                   ),
-                },
-                onMapCreated: (controller) => _mapController = controller,
-                myLocationButtonEnabled: false,
-                zoomControlsEnabled: true,
-                mapToolbarEnabled: false,
-              ),
+
+                Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        service.name,
+                        style: const TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      if (service.description != null &&
+                          service.description!.isNotEmpty) ...[
+                        const SizedBox(height: 8),
+                        Text(
+                          service.description!,
+                          style: const TextStyle(color: Colors.grey),
+                        ),
+                      ],
+                    ],
+                  ),
+                ),
+              ],
             ),
-          ),
-          const SizedBox(height: 16),
-          SizedBox(
-            width: double.infinity,
-            child: ElevatedButton.icon(
-              onPressed: () =>
-                  _openLocationOnMap(item.latitude, item.longitude),
-              icon: const Icon(Icons.open_in_new),
-              label: const Text('فتح في Google Maps'),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: _primaryGold,
-                foregroundColor: Colors.white,
-                padding: const EdgeInsets.symmetric(vertical: 14),
-                shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12)),
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
+          );
+        },
+      );
+    },
+  );
+}
 
   // ═══════════════════════════════════════════════════════════════════════════
   // ═══════════════════ Related Tab ═══════════════════════════════════════════

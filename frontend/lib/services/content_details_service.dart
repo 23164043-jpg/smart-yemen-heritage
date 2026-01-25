@@ -8,11 +8,11 @@ class ContentDetailsService {
   // دعم جميع المنصات
   static String get baseUrl {
     if (kIsWeb) {
-      return "http://192.168.34.230:5000/api/content-details/by-content/";
+      return "http://192.168.43.34:5000/api/content-details/by-content/";
     } else if (Platform.isAndroid) {
-      return "http://192.168.34.230:5000/api/content-details/by-content/";
+      return "http://192.168.43.34:5000/api/content-details/by-content/";
     } else {
-      return "http://192.168.34.230:5000/api/content-details/by-content/";
+      return "http://192.168.43.34:5000/api/content-details/by-content/";
     }
   }
 

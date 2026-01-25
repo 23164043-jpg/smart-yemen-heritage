@@ -10,11 +10,11 @@ class AuthService {
   // دعم جميع المنصات تلقائياً
   static String get baseUrl {
     if (kIsWeb) {
-      return "http://192.168.34.230:5000/api/users"; // Web
+      return "http://192.168.43.34:5000/api/users"; // Web
     } else if (Platform.isAndroid) {
-      return "http://192.168.34.230:5000/api/users"; // Android Device
+      return "http://192.168.43.34:5000/api/users"; // Android Device
     } else {
-      return "http://192.168.34.230:5000/api/users"; // iOS, Windows, macOS, Linux
+      return "http://192.168.43.34:5000/api/users"; // iOS, Windows, macOS, Linux
     }
   }
 

@@ -9,11 +9,11 @@ class ProfileService {
   // ============ إعدادات الـ API ============
   static String get baseUrl {
     if (kIsWeb) {
-      return "http://192.168.34.230:5000/api/users";
+      return "http://192.168.43.34:5000/api/users";
     } else if (Platform.isAndroid) {
-      return "http://192.168.34.230:5000/api/users";
+      return "http://192.168.43.34:5000/api/users";
     } else {
-      return "http://192.168.34.230:5000/api/users";
+      return "http://192.168.43.34:5000/api/users";
     }
   }
 

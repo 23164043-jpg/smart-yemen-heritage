@@ -5,6 +5,7 @@ import 'package:frontend/features/landmarks/schedule_screen.dart';
 import '../Antiquities/AntiquitiesScreen.dart';
 import '../ExtinctSites/ExtinctSitesScreen.dart';
 import '../search/search_screen.dart';
+import '../ocr/ocr_screen.dart';
 import '../../models/content_model.dart';
 import '../../services/content_service.dart';
 import '../../services/content_details_service.dart';
@@ -924,7 +925,7 @@ class _HomeScreenState extends State<HomeScreen> {
           physics: const NeverScrollableScrollPhysics(),
           crossAxisCount: 4,
           crossAxisSpacing: 12,
-          mainAxisSpacing: 12,
+          mainAxisSpacing: 16,
           children: [
             _buildSectionIcon(
               icon: Icons.account_balance,
@@ -967,6 +968,17 @@ class _HomeScreenState extends State<HomeScreen> {
                 Navigator.push(
                   context,
                   MaterialPageRoute(builder: (_) => const ExtinctSitesScreen()),
+                );
+              },
+            ),
+            _buildSectionIcon(
+              icon: Icons.text_fields,
+              label: 'قراءة النصوص',
+              color: const Color(0xFF1A237E),
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => const OcrScreen()),
                 );
               },
             ),

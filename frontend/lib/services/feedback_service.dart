@@ -10,11 +10,11 @@ import 'auth_service.dart'; // 💡 استيراد AuthService
 class FeedbackService {
   static String get baseUrl {
     if (kIsWeb) {
-      return "http://192.168.34.230:5000/api/feedback";
+      return "http://192.168.43.34:5000/api/feedback";
     } else if (Platform.isAndroid) {
-      return "http://192.168.34.230:5000/api/feedback";
+      return "http://192.168.43.34:5000/api/feedback";
     } else {
-      return "http://192.168.34.230:5000/api/feedback";
+      return "http://192.168.43.34:5000/api/feedback";
     }
   }
 
@@ -25,12 +25,10 @@ class FeedbackService {
     final token = await AuthService.getAuthToken();
 
     if (token == null) {
-      // إطلاق استثناء إذا لم يكن المستخدم مسجل دخول
       throw Exception(
           "Authentication required. Please log in to submit feedback.");
     }
 
-    // إعداد البيانات المراد إرسالها
     final feedbackData = {
       'user_id': userId,
       'content_id': contentId,
@@ -42,7 +40,6 @@ class FeedbackService {
       Uri.parse(baseUrl),
       headers: {
         'Content-Type': 'application/json',
-        // إرسال رمز التصديق في رأس Authorization
         'Authorization': 'Bearer $token',
       },
       body: json.encode(feedbackData),

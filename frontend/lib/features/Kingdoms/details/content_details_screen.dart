@@ -53,7 +53,7 @@ class _ContentDetailsScreenState extends State<ContentDetailsScreen> {
   // لدالة مساعدة لتصحيح رابط الصورة
   String _resolveImageUrl(String url) {
     // لدعم Android Device
-    const String baseUrl = "http://192.168.8.134:5000";
+    const String baseUrl = "http://192.168.43.34:5000";
 
     // إذا كان الرابط يبدأ بـ /uploads (مسار نسبي)، أضف الـ Base URL
     if (url.startsWith('/uploads')) {

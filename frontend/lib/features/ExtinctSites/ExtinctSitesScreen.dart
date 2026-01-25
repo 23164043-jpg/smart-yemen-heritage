@@ -31,7 +31,7 @@ class _ExtinctSitesScreenState extends State<ExtinctSitesScreen> {
   }
 
   String _resolveImageUrl(String url) {
-    const String baseUrl = "http://192.168.34.230:5000";
+    const String baseUrl = "http://192.168.43.34:5000";
     if (url.startsWith('/uploads')) return baseUrl + url;
     return url;
   }

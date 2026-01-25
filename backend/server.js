@@ -36,6 +36,7 @@ app.use('/api/feedback', require('./routes/feedbackRoutes'));
 app.use('/api/contenttypes', require('./routes/contentTypeRoutes'));
 app.use('/api/notification', require('./routes/notificationRoutes'));
 app.use("/api/ai", aiRoutes);
+app.use('/api/device-tokens', require('./routes/deviceTokenRoutes'));
 
 //  استدعاء swagger
 const { swaggerUi, swaggerSpec } = require('./swagger');

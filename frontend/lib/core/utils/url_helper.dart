@@ -7,11 +7,11 @@ class UrlHelper {
   // Base URL للصور والملفات
   static String get baseUrl {
     if (kIsWeb) {
-      return "http://192.168.34.230:5000";
+      return "http://192.168.43.34:5000";
     } else if (Platform.isAndroid) {
-      return "http://192.168.34.230:5000";
+      return "http://192.168.43.34:5000";
     } else {
-      return "http://192.168.34.230:5000";
+      return "http://192.168.43.34:5000";
     }
   }
 
@@ -27,7 +27,7 @@ class UrlHelper {
     // قائمة بالـ IPs القديمة التي يجب استبدالها
     final oldIps = [
       'http://10.0.2.2:5000',
-      'http://192.168.8.134:5000',
+      'http://192.168.43.34:5000',
       'http://192.168.200.230:5000',
       'http://localhost:5000',
       'http://10.0.2.2',
