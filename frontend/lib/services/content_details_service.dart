@@ -2,14 +2,18 @@ import 'dart:convert';
 import 'dart:io' show Platform;
 import 'package:http/http.dart' as http;
 import 'package:flutter/foundation.dart' show kIsWeb;
-import '../core/utils/url_helper.dart';
 import '../models/content_details_model.dart';
 
 class ContentDetailsService {
   // دعم جميع المنصات
   static String get baseUrl {
-    // توحيد عنوان الـ API عبر UrlHelper
-    return "${UrlHelper.baseUrl}/api/content-details/by-content/";
+    if (kIsWeb) {
+      return "http://192.168.34.230:5000/api/content-details/by-content/";
+    } else if (Platform.isAndroid) {
+      return "http://192.168.34.230:5000/api/content-details/by-content/";
+    } else {
+      return "http://192.168.34.230:5000/api/content-details/by-content/";
+    }
   }
 
   static Future<List<ContentDetails>> fetchContentDetails(
@@ -18,7 +22,7 @@ class ContentDetailsService {
       final url = Uri.parse('$baseUrl$contentId');
       print('ℹ️ ContentDetailsService: جلب البيانات من: $url');
 
-      final response = await http.get(url).timeout(const Duration(seconds: 10));
+      final response = await http.get(url).timeout(const Duration(seconds: 30));
 
       if (response.statusCode == 200) {
         final List data = json.decode(response.body);

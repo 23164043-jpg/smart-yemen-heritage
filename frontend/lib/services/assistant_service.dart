@@ -2,11 +2,16 @@ import 'dart:convert';
 import 'dart:io' show Platform;
 import 'package:http/http.dart' as http;
 import 'package:flutter/foundation.dart' show kIsWeb;
-import '../core/utils/url_helper.dart';
 
 class AssistantService {
   static String get baseUrl {
-    return "${UrlHelper.baseUrl}/api/ai";
+    if (kIsWeb) {
+      return "http://192.168.34.230:5000/api/ai";
+    } else if (Platform.isAndroid) {
+      return "http://192.168.34.230:5000/api/ai";
+    } else {
+      return "http://192.168.34.230:5000/api/ai";
+    }
   }
 
   static Future<String> sendMessage(String message) async {

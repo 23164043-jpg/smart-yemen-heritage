@@ -17,13 +17,23 @@ exports.getAll = async (req, res) => {
         let findCondition = {}; 
 
         if (requestedTypeName) {
-            // 2. البحث عن الـ ID لنوع المحتوى المطلوب
-            const contentType = await ContentType.findOne({ type_name: requestedTypeName });
+            // 2. البحث عن الـ ID لنوع المحتوى المطلوب (بحث مرن يدعم الجزء من الاسم)
+            let contentType = await ContentType.findOne({ type_name: requestedTypeName });
+
+            // إذا لم يجد بالاسم الدقيق، ابحث بشكل يحتوي على الاسم
+            if (!contentType) {
+                contentType = await ContentType.findOne({ 
+                    type_name: { $regex: requestedTypeName, $options: 'i' } 
+                });
+            }
 
             if (!contentType) {
                 // إذا لم يتم العثور على نوع المحتوى المطلوب
+                console.log(`❌ Content type "${requestedTypeName}" not found.`);
                 return res.status(404).json({ message: `Content type "${requestedTypeName}" not found.` });
             }
+
+            console.log(`✅ Found content type: ${contentType.type_name} (ID: ${contentType._id})`);
 
             // 3. تحديث شرط البحث لاستخدام الـ ID الذي تم العثور عليه
             findCondition = { type_id: contentType._id };
@@ -34,6 +44,7 @@ exports.getAll = async (req, res) => {
             .populate('type_id')
             .populate('admin_id');
 
+        console.log(`📦 Found ${list.length} contents`);
         res.json(list);
     } catch (err) { 
         console.error(err);

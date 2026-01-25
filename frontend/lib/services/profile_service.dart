@@ -3,13 +3,26 @@ import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
+<<<<<<< HEAD
 import '../core/utils/url_helper.dart';
+=======
+>>>>>>> 1971f6682764b5df039f1897ecbe0ed0eba0b32c
 
 /// خدمة إدارة البروفايل - رفع وحذف صورة البروفايل
 class ProfileService {
   // ============ إعدادات الـ API ============
   static String get baseUrl {
+<<<<<<< HEAD
     return "${UrlHelper.baseUrl}/api/users";
+=======
+    if (kIsWeb) {
+      return "http://192.168.34.230:5000/api/users";
+    } else if (Platform.isAndroid) {
+      return "http://192.168.34.230:5000/api/users";
+    } else {
+      return "http://192.168.34.230:5000/api/users";
+    }
+>>>>>>> 1971f6682764b5df039f1897ecbe0ed0eba0b32c
   }
 
   /// جلب التوكن المخزن

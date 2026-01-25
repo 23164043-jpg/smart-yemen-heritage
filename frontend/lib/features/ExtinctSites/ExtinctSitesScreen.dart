@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import '../../models/content_model.dart';
-import '../../core/utils/url_helper.dart';
 import '../../services/content_service.dart';
 import '../../services/content_details_service.dart';
 import '../landmarks/details/content_details_screen.dart';
@@ -32,7 +31,9 @@ class _ExtinctSitesScreenState extends State<ExtinctSitesScreen> {
   }
 
   String _resolveImageUrl(String url) {
-    return UrlHelper.fixImageUrl(url);
+    const String baseUrl = "http://192.168.34.230:5000";
+    if (url.startsWith('/uploads')) return baseUrl + url;
+    return url;
   }
 
   Future<String> _fetchImageForContent(String contentId, int index) async {

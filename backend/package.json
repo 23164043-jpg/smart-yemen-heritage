@@ -28,6 +28,7 @@
     "mongoose": "^7.0.4",
     "morgan": "^1.10.0",
     "multer": "^2.0.2",
+    "openai": "^6.16.0",
     "python-shell": "^5.0.0",
     "swagger-jsdoc": "^6.2.8",
     "swagger-ui-express": "^5.0.1",

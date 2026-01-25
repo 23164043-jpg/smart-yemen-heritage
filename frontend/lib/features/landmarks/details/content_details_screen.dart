@@ -10,7 +10,7 @@ import '../../../models/content_details_model.dart';
 import '../../../services/content_details_service.dart';
 // استيراد الخدمات الجديدة (Favorites & Feedback/Auth)
 import '../../../core/services/favorites_manager.dart';
-import '../../../services/feedback_service.dart' as feedback;
+import '../../../services/feedback_service.dart';
 import '../../../services/auth_service.dart';
 // استيراد الشاشات الأخرى
 import '../../ar/ar_view_screen.dart';
@@ -248,7 +248,7 @@ class _ContentDetailsScreenState extends State<ContentDetailsScreen>
 
   // =================== دالة تصحيح رابط الصورة ===================
   String _resolveImageUrl(String url) {
-    const String baseUrl = "http://10.228.82.230:5000";
+    const String baseUrl = "http://192.168.34.230:5000";
     if (url.startsWith('/uploads')) {
       return baseUrl + url;
     }
@@ -421,7 +421,7 @@ ${_currentItemDetails!.description.length > 200 ? '${_currentItemDetails!.descri
   }
 
   /// استخدام Google TTS كبديل
-  /* Future<void> _speakWithGoogleTTS(String text) async {
+  Future<void> _speakWithGoogleTTS(String text) async {
     try {
       if (mounted) setState(() => _isSpeaking = false);
       
@@ -445,7 +445,7 @@ ${_currentItemDetails!.description.length > 200 ? '${_currentItemDetails!.descri
         _showSnackBar('خدمة القراءة الصوتية غير متاحة حالياً', isError: true);
       }
     }
-  } */
+  }
 
   /// تحضير النص للقراءة الصوتية
   String _prepareTextForSpeech() {
@@ -921,7 +921,7 @@ ${_currentItemDetails!.description.length > 200 ? '${_currentItemDetails!.descri
         return;
       }
 
-      await feedback.createFeedback(
+      await FeedbackService.createFeedback(
         userId,
         widget.contentId,
         rating,

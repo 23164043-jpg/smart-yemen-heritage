@@ -80,7 +80,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
       // جلب أثر أو موقع أثري
       final antiquities =
-          await ContentService.fetchContents(type: 'ِِAntiquities(اثار)');
+          await ContentService.fetchContents(type: 'Antiquities');
       _antiquityContent = antiquities.isNotEmpty ? antiquities.first : null;
       if (_antiquityContent != null) {
         print('🏺 أثر: ${_antiquityContent!.title}');
@@ -89,7 +89,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
       // جلب موقع مندثر
       final extinctSites =
-          await ContentService.fetchContents(type: 'المواقع المندثرة');
+          await ContentService.fetchContents(type: 'Extinct Sites');
       _extinctSiteContent = extinctSites.isNotEmpty ? extinctSites.first : null;
       if (_extinctSiteContent != null) {
         print('🗺️ موقع مندثر: ${_extinctSiteContent!.title}');

@@ -3,8 +3,6 @@ import 'package:url_launcher/url_launcher.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import '../../../models/content_details_model.dart';
 import '../../../services/content_details_service.dart';
-import '../../ar/ar_view_screen.dart';
-import '../../../core/config/antiquities_models.dart';
 
 // تعريف الألوان المستخدمة لضمان التناسق
 // تم تغيير الألوان لتناسب تصميم الواجهة الرئيسية (الذهبي/الأبيض)
@@ -48,18 +46,6 @@ class _ContentDetailsScreenState extends State<ContentDetailsScreen> {
     }
   }
 
-  void _navigateToAR(String title) {
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) => ARViewScreen(
-          title: title,
-          isAntiquity: true, // تحديد أنه من قسم الآثار
-        ),
-      ),
-    );
-  }
-
   @override
   void initState() {
     super.initState();
@@ -70,7 +56,7 @@ class _ContentDetailsScreenState extends State<ContentDetailsScreen> {
   // 💡 دالة مساعدة لتصحيح رابط الصورة
   String _resolveImageUrl(String url) {
     // عنوان السيرفر الفعلي
-const String baseUrl = "http://192.168.0.198:5000";
+    const String baseUrl = "http://192.168.34.230:5000";
     
     // إذا كان الرابط يبدأ بـ /uploads
     if (url.startsWith('/uploads')) {
@@ -170,28 +156,6 @@ const String baseUrl = "http://192.168.0.198:5000";
                   ),
                 ),
               ),
-              // زر العرض ثلاثي الأبعاد
-              if (AntiquitiesModels.hasModel(item.title))
-                Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 8.0),
-                  child: Center(
-                    child: ElevatedButton.icon(
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFF8B4513), // بني داكن
-                        foregroundColor: Colors.white,
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 24, vertical: 12),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(30),
-                        ),
-                      ),
-                      onPressed: () => _navigateToAR(item.title),
-                      icon: const Icon(Icons.view_in_ar, size: 28),
-                      label: const Text('عرض النموذج ثلاثي الأبعاد',
-                          style: TextStyle(fontSize: 18)),
-                    ),
-                  ),
-                ),
               Container(
                 decoration: const BoxDecoration(
                     color: _backgroundColor,

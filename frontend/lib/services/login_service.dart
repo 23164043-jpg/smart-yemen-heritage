@@ -5,7 +5,7 @@ import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart'; // <--- الاستيراد الجديد
 
 class AuthService {
-  static const String baseUrl = "http://192.168.34.201:5000/api";
+  static const String baseUrl = "http://192.168.34.230:5000/api";
   static const String _tokenKey = 'auth_token'; // مفتاح التخزين
 
   // 1. 🔑 دالة لحفظ التوكن (Token)

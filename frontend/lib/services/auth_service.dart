@@ -4,14 +4,18 @@ import 'dart:convert';
 import 'dart:io' show Platform;
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
-import '../core/utils/url_helper.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 
 class AuthService {
   // دعم جميع المنصات تلقائياً
   static String get baseUrl {
-    // توحيد عنوان المستخدمين عبر UrlHelper
-    return "${UrlHelper.baseUrl}/api/users";
+    if (kIsWeb) {
+      return "http://192.168.34.230:5000/api/users"; // Web
+    } else if (Platform.isAndroid) {
+      return "http://192.168.34.230:5000/api/users"; // Android Device
+    } else {
+      return "http://192.168.34.230:5000/api/users"; // iOS, Windows, macOS, Linux
+    }
   }
 
   static const String _tokenKey = 'auth_token';
