@@ -4,17 +4,20 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 import '../../core/config/landmark_models.dart';
+import '../../core/config/antiquities_models.dart';
 
 class ARViewScreen extends StatefulWidget {
   final String? modelUrl;
   final String title;
   final String? landmarkId;
+  final bool isAntiquity; // لتحديد إذا كان الأثر من قسم الآثار
 
   const ARViewScreen({
     Key? key,
     this.modelUrl,
     required this.title,
     this.landmarkId,
+    this.isAntiquity = false, // الافتراضي معلم
   }) : super(key: key);
 
   @override
@@ -36,10 +39,12 @@ class _ARViewScreenState extends State<ARViewScreen> {
   bool _isAssetPath(String source) => source.startsWith('assets/');
 
   Future<void> _initWebView() async {
-    // الحصول على رابط النموذج
-    final modelSource = LandmarkModels.getModelUrl(widget.title);
+    // الحصول على رابط النموذج بناءً على النوع (معلم أو أثر)
+    final modelSource = widget.isAntiquity 
+        ? AntiquitiesModels.getModelUrl(widget.title)
+        : LandmarkModels.getModelUrl(widget.title);
 
-    print('🔍 البحث عن نموذج للمعلم: ${widget.title}');
+    print('🔍 البحث عن نموذج ${widget.isAntiquity ? "للأثر" : "للمعلم"}: ${widget.title}');
     print('📦 رابط النموذج: $modelSource');
 
     // التحقق إذا كان النموذج من Sketchfab
@@ -285,7 +290,9 @@ class _ARViewScreenState extends State<ARViewScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final hasCustomModel = LandmarkModels.hasCustomModel(widget.title);
+    final hasCustomModel = widget.isAntiquity 
+        ? AntiquitiesModels.hasModel(widget.title)
+        : LandmarkModels.hasCustomModel(widget.title);
 
     return Scaffold(
       backgroundColor: const Color(0xFF1a1a2e),
@@ -440,7 +447,9 @@ class _ARViewScreenState extends State<ARViewScreen> {
   }
 
   void _showHelpDialog() {
-    final hasCustomModel = LandmarkModels.hasCustomModel(widget.title);
+    final hasCustomModel = widget.isAntiquity 
+        ? AntiquitiesModels.hasModel(widget.title)
+        : LandmarkModels.hasCustomModel(widget.title);
 
     showDialog(
       context: context,

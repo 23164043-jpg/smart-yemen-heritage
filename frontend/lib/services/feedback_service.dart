@@ -4,18 +4,13 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'dart:io' show Platform;
 import 'package:flutter/foundation.dart' show kIsWeb;
+import '../core/utils/url_helper.dart';
 import '../models/feedback_model.dart';
 import 'auth_service.dart'; // 💡 استيراد AuthService
 
 class FeedbackService {
   static String get baseUrl {
-    if (kIsWeb) {
-      return "http://192.168.200.230:5000/api/feedback";
-    } else if (Platform.isAndroid) {
-      return "http://192.168.200.230:5000/api/feedback";
-    } else {
-      return "http://192.168.200.230:5000/api/feedback";
-    }
+    return "${UrlHelper.baseUrl}/api/feedback";
   }
 
   // 1. 🚀 إرسال تقييم جديد (يتطلب Token)
@@ -76,4 +71,10 @@ class FeedbackService {
       throw Exception("Failed to load feedback");
     }
   }
+}
+
+// 💡 دالة مستوى أعلى لتبسيط الاستدعاء من الواجهات
+Future<FeedbackItem> createFeedback(
+    String userId, String contentId, int rating, String? comment) {
+  return FeedbackService.createFeedback(userId, contentId, rating, comment);
 }

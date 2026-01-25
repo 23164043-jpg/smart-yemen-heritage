@@ -4,18 +4,14 @@ import 'dart:convert';
 import 'dart:io' show Platform;
 import 'package:http/http.dart' as http;
 import 'package:flutter/foundation.dart' show kIsWeb;
+import '../core/utils/url_helper.dart';
 import '../models/content_model.dart';
 
 class ContentService {
   // دعم جميع المنصات
   static String get baseUrl {
-    if (kIsWeb) {
-      return "http://192.168.200.230:5000/api";
-    } else if (Platform.isAndroid) {
-      return "http://192.168.200.230:5000/api";
-    } else {
-      return "http://192.168.200.230:5000/api";
-    }
+    // توحيد عنوان الـ API عبر UrlHelper
+    return "${UrlHelper.baseUrl}/api";
   }
 
   // 🌟 التعديل: الدالة تقبل الآن معامل اختياري لنوع المحتوى

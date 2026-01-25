@@ -12,6 +12,14 @@
    
    <!-- صلاحيات AR Core -->
    <uses-feature android:name="android.hardware.camera.ar" android:required="false"/>
+   
+   <!-- صلاحيات الصوت للقراءة الصوتية TTS -->
+   <uses-permission android:name="android.permission.MODIFY_AUDIO_SETTINGS"/>
+   <queries>
+       <intent>
+           <action android:name="android.intent.action.TTS_SERVICE" />
+       </intent>
+   </queries>
     
    <application
         android:label="frontend"

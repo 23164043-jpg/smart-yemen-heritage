@@ -3,13 +3,14 @@ import 'package:flutter/services.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:share_plus/share_plus.dart';
+import 'package:flutter_tts/flutter_tts.dart';
 
 // استيراد الخدمات والموديلات الأساسية
 import '../../../models/content_details_model.dart';
 import '../../../services/content_details_service.dart';
 // استيراد الخدمات الجديدة (Favorites & Feedback/Auth)
 import '../../../core/services/favorites_manager.dart';
-import '../../../services/feedback_service.dart';
+import '../../../services/feedback_service.dart' as feedback;
 import '../../../services/auth_service.dart';
 // استيراد الشاشات الأخرى
 import '../../ar/ar_view_screen.dart';
@@ -25,9 +26,11 @@ const Color _primaryGoldDark = Color(0xFFB8860B);
 const Color _backgroundColor = Colors.white;
 const Color _surfaceColor = Color(0xFFF8F9FA);
 const Color _darkCard = Color(0xFF1E1E2D);
+// ignore: unused_element
 const Color _darkCardLight = Color(0xFF2D2D3D);
 const Color _textPrimary = Color(0xFF2D2D2D);
 const Color _textSecondary = Color(0xFF6B7280);
+// ignore: unused_element
 const Color _textMuted = Color(0xFF9CA3AF);
 
 // ═══════════════════════════════════════════════════════════════════════════
@@ -57,15 +60,17 @@ class _ContentDetailsScreenState extends State<ContentDetailsScreen>
   // =================== متغيرات الحالة ===================
   late Future<List<ContentDetails>> _detailsFuture;
   late TabController _tabController;
+  late ScrollController _scrollController;
 
   bool _isBookmarked = false;
   bool _isSpeaking = false;
+  double _readingProgress = 0.0;
   ContentDetails? _currentItemDetails;
   GoogleMapController? _mapController;
 
-  // Text-to-Speech عبر Method Channel
-  static const MethodChannel _ttsChannel =
-      MethodChannel('com.example.frontend/tts');
+  // Text-to-Speech باستخدام flutter_tts
+  late FlutterTts _flutterTts;
+  // ignore: unused_field
   bool _ttsInitialized = false;
 
   final List<String> defaultImages = [
@@ -88,6 +93,9 @@ class _ContentDetailsScreenState extends State<ContentDetailsScreen>
   ];
 
   // =================== Timeline Data ===================
+  // TODO: Timeline will be fetched dynamically from backend
+  // تم تصميم الجدول الزمني ليكون ديناميكياً مستقبلاً بحيث يتم جلب
+  // الأحداث التاريخية لكل معلم من قاعدة البيانات
   final List<Map<String, String>> _timelineData = [
     {
       'period': 'العصور القديمة',
@@ -114,6 +122,8 @@ class _ContentDetailsScreenState extends State<ContentDetailsScreen>
   void initState() {
     super.initState();
     _tabController = TabController(length: 3, vsync: this);
+    _scrollController = ScrollController();
+    _scrollController.addListener(_updateReadingProgress);
     _checkToken();
     _isBookmarked = FavoritesManager.instance.isFavorite(widget.contentId);
     _detailsFuture =
@@ -121,25 +131,106 @@ class _ContentDetailsScreenState extends State<ContentDetailsScreen>
     _initTts();
   }
 
-  /// تهيئة Text-to-Speech عبر Method Channel
+  /// تحديث مؤشر تقدم القراءة
+  void _updateReadingProgress() {
+    if (_scrollController.hasClients) {
+      final maxScroll = _scrollController.position.maxScrollExtent;
+      final currentScroll = _scrollController.position.pixels;
+      if (maxScroll > 0) {
+        setState(() {
+          _readingProgress = (currentScroll / maxScroll).clamp(0.0, 1.0);
+        });
+      }
+    }
+  }
+
+  /// تهيئة Text-to-Speech باستخدام flutter_tts
   Future<void> _initTts() async {
+    _flutterTts = FlutterTts();
+    
     try {
-      final result = await _ttsChannel.invokeMethod('initialize', {
-        'language': 'ar',
-        'speechRate': 0.8,
+      // ========== إعدادات Android المحسنة ==========
+      // تعيين المحرك الافتراضي
+      await _flutterTts.setEngine("com.google.android.tts");
+      
+      // الحصول على المحركات المتاحة
+      var engines = await _flutterTts.getEngines;
+      debugPrint('🔧 TTS Engines: $engines');
+      
+      // الحصول على اللغات المتاحة
+      var languages = await _flutterTts.getLanguages;
+      debugPrint('🌍 TTS Languages: $languages');
+      
+      // محاولة ضبط اللغة العربية بأشكالها المختلفة
+      List<String> arabicVariants = ['ar-SA', 'ar', 'ar-EG', 'ar-AE', 'ara', 'ar-YE'];
+      bool languageSet = false;
+      
+      for (String lang in arabicVariants) {
+        try {
+          var result = await _flutterTts.setLanguage(lang);
+          if (result == 1) {
+            debugPrint('✅ TTS: Language set to $lang');
+            languageSet = true;
+            break;
+          }
+        } catch (e) {
+          debugPrint('⚠️ TTS: Failed to set language $lang');
+        }
+      }
+      
+      // إذا لم تنجح العربية، استخدم الإنجليزية كبديل
+      if (!languageSet) {
+        debugPrint('⚠️ TTS: Arabic not available, using English');
+        await _flutterTts.setLanguage('en-US');
+      }
+      
+      // ========== ضبط الإعدادات الصوتية ==========
+      await _flutterTts.setSpeechRate(0.5); // سرعة متوسطة
+      await _flutterTts.setPitch(1.0);
+      await _flutterTts.setVolume(1.0); // أقصى صوت
+      
+      // ========== إعدادات Android الإضافية ==========
+      await _flutterTts.awaitSpeakCompletion(true);
+      
+      // ========== معالجات الأحداث ==========
+      _flutterTts.setStartHandler(() {
+        debugPrint('🔊 TTS: بدأت القراءة');
+        if (mounted) setState(() => _isSpeaking = true);
       });
-      _ttsInitialized = result == true;
-    } catch (e) {
-      debugPrint('TTS initialization error: $e');
-      // TTS متاح افتراضياً على معظم أجهزة Android
+      
+      _flutterTts.setCompletionHandler(() {
+        debugPrint('✅ TTS: اكتملت القراءة');
+        if (mounted) setState(() => _isSpeaking = false);
+      });
+      
+      _flutterTts.setErrorHandler((message) {
+        debugPrint('❌ TTS Error: $message');
+        if (mounted) setState(() => _isSpeaking = false);
+      });
+      
+      _flutterTts.setCancelHandler(() {
+        debugPrint('🛑 TTS: تم إلغاء القراءة');
+        if (mounted) setState(() => _isSpeaking = false);
+      });
+      
+      _flutterTts.setProgressHandler((text, start, end, word) {
+        debugPrint('📖 TTS Progress: $word');
+      });
+      
       _ttsInitialized = true;
+      debugPrint('✅ TTS: تم تهيئة flutter_tts بنجاح');
+    } catch (e) {
+      debugPrint('❌ TTS initialization error: $e');
+      _ttsInitialized = false;
     }
   }
 
   @override
   void dispose() {
-    _stopSpeaking();
+    _flutterTts.stop();
     _tabController.dispose();
+    _scrollController.removeListener(_updateReadingProgress);
+    _scrollController.dispose();
     _mapController?.dispose();
     super.dispose();
   }
@@ -147,16 +238,17 @@ class _ContentDetailsScreenState extends State<ContentDetailsScreen>
   /// إيقاف القراءة الصوتية
   Future<void> _stopSpeaking() async {
     try {
-      await _ttsChannel.invokeMethod('stop');
+      await _flutterTts.stop();
+      debugPrint('🔇 TTS: تم إيقاف القراءة');
     } catch (e) {
-      debugPrint('TTS stop error: $e');
+      debugPrint('❌ TTS stop error: $e');
     }
     if (mounted) setState(() => _isSpeaking = false);
   }
 
   // =================== دالة تصحيح رابط الصورة ===================
   String _resolveImageUrl(String url) {
-    const String baseUrl = "http://192.168.200.230:5000";
+    const String baseUrl = "http://10.228.82.230:5000";
     if (url.startsWith('/uploads')) {
       return baseUrl + url;
     }
@@ -222,57 +314,118 @@ ${_currentItemDetails!.description.length > 200 ? '${_currentItemDetails!.descri
   }
 
   Future<void> _toggleSpeech() async {
-    print('🔊🔊🔊 TTS BUTTON PRESSED 🔊🔊🔊');
-    
+    debugPrint('🔊🔊🔊 TTS BUTTON PRESSED 🔊🔊🔊');
+
     if (_currentItemDetails == null) {
-      print('❌ TTS: Content not loaded');
+      debugPrint('❌ TTS: Content not loaded');
       _showSnackBar('الرجاء الانتظار حتى يتم تحميل المحتوى', isError: true);
       return;
     }
 
     if (_isSpeaking) {
-      // إيقاف القراءة
-      print('🔇 TTS: Stopping speech');
+      // ========== إيقاف القراءة ==========
+      debugPrint('🔇 TTS: Stopping speech');
       await _stopSpeaking();
       _showSnackBar('تم إيقاف القراءة 🔇', icon: Icons.volume_off);
     } else {
-      // بدء القراءة
+      // ========== بدء القراءة ==========
       setState(() => _isSpeaking = true);
-      _showSnackBar('جاري القراءة الصوتية... 🔊', icon: Icons.volume_up);
+      _showSnackBar('جاري تحضير القراءة الصوتية... ⏳', icon: Icons.hourglass_empty);
 
       // تحضير النص للقراءة
       String textToRead = _prepareTextForSpeech();
-      print('📝 TTS: Text length: ${textToRead.length}');
+      debugPrint('📝 TTS: Text to read: ${textToRead.substring(0, textToRead.length > 100 ? 100 : textToRead.length)}...');
+
+      if (textToRead.isEmpty) {
+        debugPrint('❌ TTS: No text to read');
+        setState(() => _isSpeaking = false);
+        _showSnackBar('لا يوجد محتوى للقراءة', isError: true);
+        return;
+      }
 
       try {
-        // بدء القراءة عبر Method Channel
-        print('🚀 TTS: Calling Method Channel speak');
-        final result = await _ttsChannel.invokeMethod('speak', {
-          'text': textToRead,
-          'language': 'ar',
+        // ========== تهيئة إعدادات TTS ==========
+        // محاولة تعيين المحرك
+        try {
+          await _flutterTts.setEngine("com.google.android.tts");
+        } catch (e) {
+          debugPrint('⚠️ TTS: Could not set engine: $e');
+        }
+        
+        // الحصول على اللغات المتاحة
+        var languages = await _flutterTts.getLanguages;
+        debugPrint('🌍 TTS: Available languages = $languages');
+        
+        // محاولة ضبط اللغة العربية
+        List<String> arabicVariants = ['ar-SA', 'ar', 'ar-EG', 'ar-AE', 'ara', 'ar-YE'];
+        bool languageSet = false;
+        
+        for (String lang in arabicVariants) {
+          try {
+            var result = await _flutterTts.setLanguage(lang);
+            if (result == 1) {
+              debugPrint('✅ TTS: Language set to $lang');
+              languageSet = true;
+              break;
+            }
+          } catch (e) {
+            debugPrint('⚠️ TTS: Failed to set language $lang');
+          }
+        }
+        
+        if (!languageSet) {
+          debugPrint('⚠️ TTS: Arabic not available, trying English');
+          await _flutterTts.setLanguage('en-US');
+        }
+        
+        // ========== ضبط الإعدادات الصوتية ==========
+        await _flutterTts.setSpeechRate(0.5);
+        await _flutterTts.setPitch(1.0);
+        await _flutterTts.setVolume(1.0);
+        
+        // ========== معالجات الأحداث ==========
+        _flutterTts.setCompletionHandler(() {
+          debugPrint('✅ TTS: Completed reading');
+          if (mounted) setState(() => _isSpeaking = false);
         });
-        print('✅ TTS: Result = $result');
 
-        // محاكاة وقت القراءة (تقريبياً 100 كلمة في الدقيقة)
-        final wordCount = textToRead.split(' ').length;
-        final estimatedDuration =
-            Duration(milliseconds: (wordCount * 600).clamp(3000, 60000));
-        print('⏱️ TTS: Duration = ${estimatedDuration.inSeconds}s');
+        _flutterTts.setErrorHandler((error) {
+          debugPrint('❌ TTS Error: $error');
+          if (mounted) {
+            setState(() => _isSpeaking = false);
+            _showSnackBar('حدث خطأ في القراءة الصوتية', isError: true);
+          }
+        });
 
-        await Future.delayed(estimatedDuration);
-        if (mounted) setState(() => _isSpeaking = false);
+        // ========== بدء القراءة ==========
+        debugPrint('🚀 TTS: Starting speech...');
+        var result = await _flutterTts.speak(textToRead);
+        debugPrint('📢 TTS: Speak result = $result');
+        
+        if (result == 1) {
+          _showSnackBar('جاري القراءة الصوتية... 🔊', icon: Icons.volume_up);
+        } else {
+          debugPrint('⚠️ TTS: Speak returned $result, trying alternative');
+          setState(() => _isSpeaking = false);
+          _showSnackBar('يرجى تثبيت محرك Google TTS من المتجر', isError: true);
+        }
+
       } catch (e) {
-        print('❌❌❌ TTS ERROR: $e');
-        if (mounted) setState(() => _isSpeaking = false);
-        _showSnackBar('خطأ في القراءة الصوتية', isError: true);
+        debugPrint('❌❌❌ TTS ERROR: $e');
+        if (mounted) {
+          setState(() => _isSpeaking = false);
+          _showSnackBar('خدمة القراءة الصوتية غير متاحة - يرجى تثبيت Google TTS', isError: true);
+        }
       }
     }
   }
 
   /// استخدام Google TTS كبديل
-  Future<void> _speakWithGoogleTTS(String text) async {
+  /* Future<void> _speakWithGoogleTTS(String text) async {
     try {
-      // تقصير النص إذا كان طويلاً جداً
+      if (mounted) setState(() => _isSpeaking = false);
+      
+      // تقصير النص إذا كان طويلاً جداً (Google TTS limit)
       final shortText = text.length > 200 ? text.substring(0, 200) : text;
       final encodedText = Uri.encodeComponent(shortText);
       final url =
@@ -280,7 +433,10 @@ ${_currentItemDetails!.description.length > 200 ? '${_currentItemDetails!.descri
 
       final uri = Uri.parse(url);
       if (await canLaunchUrl(uri)) {
+        _showSnackBar('جاري فتح القراءة الصوتية... 🔊', icon: Icons.volume_up);
         await launchUrl(uri, mode: LaunchMode.externalApplication);
+      } else {
+        _showSnackBar('خدمة القراءة الصوتية غير متاحة على هذا الجهاز', isError: true);
       }
     } catch (e) {
       debugPrint('Google TTS error: $e');
@@ -289,7 +445,7 @@ ${_currentItemDetails!.description.length > 200 ? '${_currentItemDetails!.descri
         _showSnackBar('خدمة القراءة الصوتية غير متاحة حالياً', isError: true);
       }
     }
-  }
+  } */
 
   /// تحضير النص للقراءة الصوتية
   String _prepareTextForSpeech() {
@@ -571,6 +727,7 @@ ${_currentItemDetails!.description.length > 200 ? '${_currentItemDetails!.descri
   }
 
   /// فتح الخريطة داخل التطبيق في صفحة منفصلة
+  // ignore: unused_element
   void _openInAppMap(ContentDetails item) {
     Navigator.push(
       context,
@@ -764,7 +921,7 @@ ${_currentItemDetails!.description.length > 200 ? '${_currentItemDetails!.descri
         return;
       }
 
-      await FeedbackService.createFeedback(
+      await feedback.createFeedback(
         userId,
         widget.contentId,
         rating,
@@ -934,32 +1091,83 @@ ${_currentItemDetails!.description.length > 200 ? '${_currentItemDetails!.descri
             ? _resolveImageUrl(item.imageUrl!)
             : defaultImages[0];
 
-    return CustomScrollView(
-      slivers: [
-        // ═══════════════════ 1️⃣ Hero Section ═══════════════════
-        _buildHeroSection(item, resolvedImageUrl, screenHeight),
+    return Stack(
+      children: [
+        CustomScrollView(
+          controller: _scrollController,
+          slivers: [
+            // ═══════════════════ 1️⃣ Hero Section ═══════════════════
+            _buildHeroSection(item, resolvedImageUrl, screenHeight),
 
-        // ═══════════════════ 2️⃣ Info Bar ═══════════════════
-        SliverToBoxAdapter(child: _buildInfoBar(item)),
+            // ═══════════════════ 2️⃣ Info Bar ═══════════════════
+            SliverToBoxAdapter(child: _buildInfoBar(item)),
 
-        // ═══════════════════ 3️⃣ Article Content ═══════════════════
-        SliverToBoxAdapter(child: _buildArticleContent(item)),
+            // ═══════════════════ 3️⃣ Article Content (with highlights) ═══════════════════
+            SliverToBoxAdapter(child: _buildArticleContent(item)),
 
-        // ═══════════════════ 4️⃣ Tabs Section ═══════════════════
-        SliverToBoxAdapter(child: _buildTabsSection(item)),
+            // ═══════════════════ 4️⃣ Tabs Section ═══════════════════
+            SliverToBoxAdapter(child: _buildTabsSection(item)),
 
-        // ═══════════════════ 5️⃣ Quick Facts ═══════════════════
-        SliverToBoxAdapter(child: _buildQuickFacts()),
+            // ═══════════════════ 5️⃣ Quick Facts ═══════════════════
+            SliverToBoxAdapter(child: _buildQuickFacts()),
 
-        // ═══════════════════ 6️⃣ Need Help / AI Section ═══════════════════
-        SliverToBoxAdapter(child: _buildNeedHelpSection()),
+            // ═══════════════════ 6️⃣ المصادر والمراجع (Academic Section) ═══════════════════
+            SliverToBoxAdapter(child: _buildAcademicSourcesSection(item)),
 
-        // ═══════════════════ 7️⃣ Footer ═══════════════════
-        SliverToBoxAdapter(child: _buildFooter()),
+            // ═══════════════════ 7️⃣ Need Help / AI Section ═══════════════════
+            SliverToBoxAdapter(child: _buildNeedHelpSection()),
 
-        // مساحة إضافية
-        const SliverToBoxAdapter(child: SizedBox(height: 32)),
+            // ═══════════════════ 8️⃣ Footer ═══════════════════
+            SliverToBoxAdapter(child: _buildFooter()),
+
+            // مساحة إضافيةافية
+            const SliverToBoxAdapter(child: SizedBox(height: 32)),
+          ],
+        ),
+
+        // ═══════════════════ مؤشر تقدم القراءة ═══════════════════
+        Positioned(
+          top: 0,
+          left: 0,
+          right: 0,
+          child: _buildReadingProgressIndicator(),
+        ),
       ],
+    );
+  }
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // ═══════════════════ مؤشر تقدم القراءة ═══════════════════════════════════
+  // ═══════════════════════════════════════════════════════════════════════════
+
+  Widget _buildReadingProgressIndicator() {
+    return AnimatedOpacity(
+      opacity: _readingProgress > 0.02 ? 1.0 : 0.0,
+      duration: const Duration(milliseconds: 200),
+      child: Container(
+        height: 3,
+        decoration: BoxDecoration(
+          color: Colors.grey.withOpacity(0.2),
+        ),
+        child: FractionallySizedBox(
+          alignment: Alignment.centerLeft,
+          widthFactor: _readingProgress,
+          child: Container(
+            decoration: BoxDecoration(
+              gradient: const LinearGradient(
+                colors: [_primaryGoldLight, _primaryGold, _primaryGoldDark],
+              ),
+              boxShadow: [
+                BoxShadow(
+                  color: _primaryGold.withOpacity(0.5),
+                  blurRadius: 4,
+                  spreadRadius: 1,
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
     );
   }
 
@@ -1287,6 +1495,27 @@ ${_currentItemDetails!.description.length > 200 ? '${_currentItemDetails!.descri
   // ═══════════════════ 3️⃣ Article Content ═══════════════════════════════════
   // ═══════════════════════════════════════════════════════════════════════════
 
+  // قائمة المصطلحات المهمة للتمييز
+  static const List<String> _highlightTerms = [
+    'القرن السادس عشر',
+    'القرن الخامس عشر',
+    'القرن السابع عشر',
+    'صنعاء القديمة',
+    'صنعاء',
+    'مأرب',
+    'سبأ',
+    'حمير',
+    'معين',
+    'قتبان',
+    'اليونسكو',
+    'UNESCO',
+    'التراث العالمي',
+    'العصور القديمة',
+    'العصور الوسطى',
+    'الحضارة اليمنية',
+    'اليمن القديم',
+  ];
+
   Widget _buildArticleContent(ContentDetails item) {
     final paragraphs =
         item.description.split('\n').where((p) => p.trim().isNotEmpty).toList();
@@ -1321,7 +1550,7 @@ ${_currentItemDetails!.description.length > 200 ? '${_currentItemDetails!.descri
           ),
           const SizedBox(height: 20),
 
-          // محتوى الوصف
+          // محتوى الوصف مع تمييز المصطلحات
           Container(
             padding: const EdgeInsets.all(20),
             decoration: BoxDecoration(
@@ -1332,37 +1561,97 @@ ${_currentItemDetails!.description.length > 200 ? '${_currentItemDetails!.descri
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: paragraphs.isEmpty
-                  ? [
-                      Text(
-                        item.description,
-                        textAlign: TextAlign.justify,
-                        style: const TextStyle(
-                          fontSize: 16,
-                          color: _textPrimary,
-                          height: 1.9,
-                          letterSpacing: 0.3,
-                        ),
-                      ),
-                    ]
+                  ? [_buildHighlightedText(item.description)]
                   : paragraphs.map((paragraph) {
                       return Padding(
                         padding: const EdgeInsets.only(bottom: 16),
-                        child: Text(
-                          paragraph.trim(),
-                          textAlign: TextAlign.justify,
-                          style: const TextStyle(
-                            fontSize: 16,
-                            color: _textPrimary,
-                            height: 1.9,
-                            letterSpacing: 0.3,
-                          ),
-                        ),
+                        child: _buildHighlightedText(paragraph.trim()),
                       );
                     }).toList(),
             ),
           ),
         ],
       ),
+    );
+  }
+
+  /// بناء نص مع تمييز المصطلحات المهمة
+  Widget _buildHighlightedText(String text) {
+    // تقسيم النص وتمييز المصطلحات
+    List<InlineSpan> spans = [];
+    String remainingText = text;
+
+    while (remainingText.isNotEmpty) {
+      int earliestIndex = remainingText.length;
+      String? foundTerm;
+
+      // البحث عن أقرب مصطلح
+      for (String term in _highlightTerms) {
+        int index = remainingText.indexOf(term);
+        if (index != -1 && index < earliestIndex) {
+          earliestIndex = index;
+          foundTerm = term;
+        }
+      }
+
+      if (foundTerm != null && earliestIndex < remainingText.length) {
+        // إضافة النص قبل المصطلح
+        if (earliestIndex > 0) {
+          spans.add(TextSpan(
+            text: remainingText.substring(0, earliestIndex),
+            style: const TextStyle(
+              fontSize: 16,
+              color: _textPrimary,
+              height: 1.9,
+              letterSpacing: 0.3,
+            ),
+          ));
+        }
+
+        // إضافة المصطلح المميز
+        spans.add(WidgetSpan(
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
+            margin: const EdgeInsets.symmetric(horizontal: 1),
+            decoration: BoxDecoration(
+              color: _primaryGold.withOpacity(0.15),
+              borderRadius: BorderRadius.circular(4),
+              border:
+                  Border.all(color: _primaryGold.withOpacity(0.3), width: 0.5),
+            ),
+            child: Text(
+              foundTerm,
+              style: TextStyle(
+                fontSize: 15,
+                color: _primaryGoldDark,
+                fontWeight: FontWeight.w600,
+                height: 1.4,
+              ),
+            ),
+          ),
+        ));
+
+        remainingText =
+            remainingText.substring(earliestIndex + foundTerm.length);
+      } else {
+        // إضافة باقي النص
+        spans.add(TextSpan(
+          text: remainingText,
+          style: const TextStyle(
+            fontSize: 16,
+            color: _textPrimary,
+            height: 1.9,
+            letterSpacing: 0.3,
+          ),
+        ));
+        break;
+      }
+    }
+
+    return RichText(
+      textAlign: TextAlign.justify,
+      textDirection: TextDirection.rtl,
+      text: TextSpan(children: spans),
     );
   }
 
@@ -1634,6 +1923,11 @@ ${_currentItemDetails!.description.length > 200 ? '${_currentItemDetails!.descri
   // ═══════════════════════════════════════════════════════════════════════════
 
   Widget _buildRelatedTab() {
+    // TODO: Related landmarks will be fetched dynamically from backend
+    // سيتم جلب المعالم ذات الصلة ديناميكياً من قاعدة البيانات بناءً على:
+    // - التصنيف المشترك
+    // - الموقع الجغرافي القريب
+    // - الفترة التاريخية المشابهة
     final List<Map<String, String>> relatedLandmarks = [
       {'name': 'دار الحجر', 'image': 'assets/images/dar_alhajar1.jpg'},
       {'name': 'قصر غمدان', 'image': 'assets/images/dar_alhajar2.jpg'},
@@ -1642,89 +1936,121 @@ ${_currentItemDetails!.description.length > 200 ? '${_currentItemDetails!.descri
 
     return Container(
       padding: const EdgeInsets.all(20),
-      child: ListView.builder(
-        padding: EdgeInsets.zero,
-        physics: const NeverScrollableScrollPhysics(),
-        itemCount: relatedLandmarks.length,
-        itemBuilder: (context, index) {
-          final landmark = relatedLandmarks[index];
-
-          return Container(
-            margin: const EdgeInsets.only(bottom: 12),
+      child: Column(
+        children: [
+          // عنوان توضيحي
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+            margin: const EdgeInsets.only(bottom: 16),
             decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(16),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withOpacity(0.05),
-                  blurRadius: 10,
-                  offset: const Offset(0, 2),
+              color: _primaryGold.withOpacity(0.1),
+              borderRadius: BorderRadius.circular(10),
+              border: Border.all(color: _primaryGold.withOpacity(0.2)),
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(Icons.auto_awesome, color: _primaryGold, size: 16),
+                const SizedBox(width: 8),
+                const Text(
+                  'نماذج مقترحة ذات صلة',
+                  style: TextStyle(
+                    color: _primaryGold,
+                    fontSize: 13,
+                    fontWeight: FontWeight.w600,
+                  ),
                 ),
               ],
             ),
-            child: Material(
-              color: Colors.transparent,
-              child: InkWell(
-                borderRadius: BorderRadius.circular(16),
-                onTap: () {},
-                child: Padding(
-                  padding: const EdgeInsets.all(12),
-                  child: Row(
-                    children: [
-                      ClipRRect(
-                        borderRadius: BorderRadius.circular(12),
-                        child: Image.asset(
-                          landmark['image']!,
-                          width: 80,
-                          height: 80,
-                          fit: BoxFit.cover,
-                          errorBuilder: (_, __, ___) => Container(
-                            width: 80,
-                            height: 80,
-                            color: _surfaceColor,
-                            child:
-                                const Icon(Icons.image, color: _textSecondary),
-                          ),
-                        ),
+          ),
+          // القائمة
+          Expanded(
+            child: ListView.builder(
+              padding: EdgeInsets.zero,
+              physics: const NeverScrollableScrollPhysics(),
+              itemCount: relatedLandmarks.length,
+              itemBuilder: (context, index) {
+                final landmark = relatedLandmarks[index];
+
+                return Container(
+                  margin: const EdgeInsets.only(bottom: 12),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(16),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.05),
+                        blurRadius: 10,
+                        offset: const Offset(0, 2),
                       ),
-                      const SizedBox(width: 16),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
+                    ],
+                  ),
+                  child: Material(
+                    color: Colors.transparent,
+                    child: InkWell(
+                      borderRadius: BorderRadius.circular(16),
+                      onTap: () {},
+                      child: Padding(
+                        padding: const EdgeInsets.all(12),
+                        child: Row(
                           children: [
-                            Text(
-                              landmark['name']!,
-                              style: const TextStyle(
-                                fontSize: 16,
-                                fontWeight: FontWeight.bold,
-                                color: _textPrimary,
+                            ClipRRect(
+                              borderRadius: BorderRadius.circular(12),
+                              child: Image.asset(
+                                landmark['image']!,
+                                width: 80,
+                                height: 80,
+                                fit: BoxFit.cover,
+                                errorBuilder: (_, __, ___) => Container(
+                                  width: 80,
+                                  height: 80,
+                                  color: _surfaceColor,
+                                  child: const Icon(Icons.image,
+                                      color: _textSecondary),
+                                ),
                               ),
                             ),
-                            const SizedBox(height: 4),
-                            const Text(
-                              'معلم تاريخي',
-                              style: TextStyle(
-                                  fontSize: 13, color: _textSecondary),
+                            const SizedBox(width: 16),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    landmark['name']!,
+                                    style: const TextStyle(
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.bold,
+                                      color: _textPrimary,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 4),
+                                  const Text(
+                                    'معلم تاريخي',
+                                    style: TextStyle(
+                                        fontSize: 13, color: _textSecondary),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            Container(
+                              padding: const EdgeInsets.all(8),
+                              decoration: BoxDecoration(
+                                color: _primaryGold.withOpacity(0.1),
+                                shape: BoxShape.circle,
+                              ),
+                              child: const Icon(Icons.arrow_forward_ios,
+                                  color: _primaryGold, size: 16),
                             ),
                           ],
                         ),
                       ),
-                      Container(
-                        padding: const EdgeInsets.all(8),
-                        decoration: BoxDecoration(
-                          color: _primaryGold.withOpacity(0.1),
-                          shape: BoxShape.circle,
-                        ),
-                        child: const Icon(Icons.arrow_forward_ios,
-                            color: _primaryGold, size: 16),
-                      ),
-                    ],
+                    ),
                   ),
-                ),
-              ),
+                );
+              },
             ),
-          );
-        },
+          ),
+        ],
       ),
     );
   }
@@ -1818,7 +2144,242 @@ ${_currentItemDetails!.description.length > 200 ? '${_currentItemDetails!.descri
   }
 
   // ═══════════════════════════════════════════════════════════════════════════
-  // ═══════════════════ 6️⃣ Need Help Section ═══════════════════════════════════
+  // ═══════════════════ 6️⃣ المصادر والمراجع (Academic Section) ═══════════════════
+  // ═══════════════════════════════════════════════════════════════════════════
+
+  Widget _buildAcademicSourcesSection(ContentDetails item) {
+    // تحديد التصنيف بناءً على نوع المحتوى
+    String contentType = 'معلم تاريخي';
+    IconData typeIcon = Icons.account_balance;
+    Color typeColor = const Color(0xFF2E7D32);
+
+    // يمكن تحديد النوع ديناميكياً لاحقاً من backend
+    // TODO: سيتم جلب التصنيف من قاعدة البيانات
+
+    return Container(
+      margin: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: Colors.grey.shade200),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // رأس القسم
+          Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: const Color(0xFF1E3A5F).withOpacity(0.05),
+              borderRadius:
+                  const BorderRadius.vertical(top: Radius.circular(20)),
+            ),
+            child: Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(10),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF1E3A5F).withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: const Icon(
+                    Icons.school_outlined,
+                    color: Color(0xFF1E3A5F),
+                    size: 24,
+                  ),
+                ),
+                const SizedBox(width: 12),
+                const Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'المصادر والمراجع',
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                          color: Color(0xFF1E3A5F),
+                        ),
+                      ),
+                      SizedBox(height: 2),
+                      Text(
+                        'معلومات توثيقية وأكاديمية',
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: _textSecondary,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                // شارة موثق
+                Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: Colors.green.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(20),
+                    border: Border.all(color: Colors.green.withOpacity(0.3)),
+                  ),
+                  child: const Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(Icons.verified, color: Colors.green, size: 14),
+                      SizedBox(width: 4),
+                      Text(
+                        'موثق',
+                        style: TextStyle(
+                          color: Colors.green,
+                          fontSize: 11,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+
+          // محتوى المصادر
+          Padding(
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              children: [
+                // التصنيف
+                _buildSourceInfoRow(
+                  icon: typeIcon,
+                  label: 'التصنيف',
+                  value: contentType,
+                  valueColor: typeColor,
+                ),
+                const Divider(height: 24),
+
+                // الفترة التاريخية
+                _buildSourceInfoRow(
+                  icon: Icons.history_edu,
+                  label: 'الفترة التاريخية',
+                  value: 'العصور القديمة', // TODO: سيتم جلبه من backend
+                ),
+                const Divider(height: 24),
+
+                // الموقع الجغرافي
+                _buildSourceInfoRow(
+                  icon: Icons.place_outlined,
+                  label: 'الموقع',
+                  value: item.address ?? 'اليمن',
+                ),
+                const Divider(height: 24),
+
+                // آخر تحديث
+                _buildSourceInfoRow(
+                  icon: Icons.update,
+                  label: 'آخر تحديث للمحتوى',
+                  value: _formatLastUpdate(),
+                ),
+                const Divider(height: 24),
+
+                // مصدر البيانات
+                _buildSourceInfoRow(
+                  icon: Icons.source_outlined,
+                  label: 'مصدر البيانات',
+                  value: 'الموسوعة الذكية للتراث اليمني',
+                ),
+              ],
+            ),
+          ),
+
+          // تذييل المصادر
+          Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: Colors.amber.withOpacity(0.05),
+              borderRadius:
+                  const BorderRadius.vertical(bottom: Radius.circular(20)),
+              border: Border(top: BorderSide(color: Colors.grey.shade200)),
+            ),
+            child: Row(
+              children: [
+                Icon(Icons.info_outline, color: Colors.amber[700], size: 18),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Text(
+                    'يتم تحديث المحتوى دورياً لضمان دقة المعلومات',
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: Colors.amber[800],
+                      height: 1.4,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// بناء صف معلومات المصدر
+  Widget _buildSourceInfoRow({
+    required IconData icon,
+    required String label,
+    required String value,
+    Color? valueColor,
+  }) {
+    return Row(
+      children: [
+        Container(
+          padding: const EdgeInsets.all(8),
+          decoration: BoxDecoration(
+            color: _surfaceColor,
+            borderRadius: BorderRadius.circular(8),
+          ),
+          child: Icon(icon, color: _primaryGold, size: 18),
+        ),
+        const SizedBox(width: 12),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                label,
+                style: const TextStyle(
+                  fontSize: 12,
+                  color: _textSecondary,
+                ),
+              ),
+              const SizedBox(height: 2),
+              Text(
+                value,
+                style: TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w600,
+                  color: valueColor ?? _textPrimary,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  /// تنسيق تاريخ آخر تحديث
+  String _formatLastUpdate() {
+    final now = DateTime.now();
+    return '${now.day}/${now.month}/${now.year}';
+  }
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // ═══════════════════ 7️⃣ Need Help Section ═══════════════════════════════════
   // ═══════════════════════════════════════════════════════════════════════════
 
   Widget _buildNeedHelpSection() {
@@ -2027,6 +2588,7 @@ class _FullScreenMapPageState extends State<_FullScreenMapPage> {
     }
   }
 
+  // ignore: unused_element
   String _getStaticMapUrl() {
     final mapType = _isSatellite ? 'satellite' : 'roadmap';
     return 'https://maps.googleapis.com/maps/api/staticmap'

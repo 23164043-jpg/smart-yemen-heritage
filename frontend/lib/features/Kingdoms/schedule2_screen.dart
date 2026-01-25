@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../models/content_model.dart';
+import '../../core/utils/url_helper.dart';
 import '../../services/content_service.dart';
 import '../../services/content_details_service.dart';
 import '../landmarks/details/content_details_screen.dart';
@@ -27,10 +28,7 @@ class _KingdomsScreenState extends State<KingdomsScreen> {
   }
 
   String _resolveImageUrl(String url) {
-    // دعم Android Device
-    const String baseUrl = "http://192.168.8.134:5000";
-    if (url.startsWith('/uploads')) return baseUrl + url;
-    return url;
+    return UrlHelper.fixImageUrl(url);
   }
 
   // نفس الدالة الموجودة في المعالم

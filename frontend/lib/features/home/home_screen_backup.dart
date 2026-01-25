@@ -1,3 +1,6 @@
+// ignore_for_file: unused_field, unused_local_variable, undefined_identifier, duplicate_definition, unused_import
+// هذا ملف نسخة احتياطية - يحتوي على أخطاء ولا يُستخدم في التطبيق
+
 import 'package:flutter/material.dart';
 import 'package:frontend/features/assistant/smart_assistant_screen.dart';
 import 'package:frontend/features/Kingdoms/schedule2_screen.dart';
@@ -9,6 +12,12 @@ import '../ar/ar_view_screen.dart';
 import '../../models/content_model.dart';
 import '../../services/content_service.dart';
 import '../Landmarks/details/content_details_screen.dart';
+
+// تعريف المتغيرات المفقودة
+final List<Map<String, String>> allPlaces = [];
+final List<String> categories = ['معالم', 'ممالك', 'آثار', 'مواقع منقرضة'];
+int _selectedNavIndex = 0;
+int _selectedCategoryIndex = 0;
 
 class HomeScreen extends StatefulWidget {
   final String userName;

@@ -4,28 +4,34 @@ import 'dart:convert';
 import 'dart:io' show Platform;
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
+import '../core/utils/url_helper.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 
 class AuthService {
   // دعم جميع المنصات تلقائياً
   static String get baseUrl {
-    if (kIsWeb) {
-      return "http://192.168.200.230:5000/api/users"; // Web
-    } else if (Platform.isAndroid) {
-      return "http://192.168.200.230:5000/api/users"; // Android Device
-    } else {
-      return "http://192.168.200.230:5000/api/users"; // iOS, Windows, macOS, Linux
-    }
+    // توحيد عنوان المستخدمين عبر UrlHelper
+    return "${UrlHelper.baseUrl}/api/users";
   }
 
   static const String _tokenKey = 'auth_token';
   static const String _userIdKey = 'user_id';
+  static const String _userNameKey = 'user_name';
+  static const String _userEmailKey = 'user_email';
 
   // 1. 🔑 دالة لحفظ التوكن ومعرف المستخدم
-  static Future<void> _saveTokenAndUserId(String token, String userId) async {
+  static Future<void> _saveTokenAndUserId(String token, String userId, {String? userName, String? userEmail}) async {
     final prefs = await SharedPreferences.getInstance();
     final successToken = await prefs.setString(_tokenKey, token);
     final successId = await prefs.setString(_userIdKey, userId);
+    
+    // حفظ اسم المستخدم والبريد الإلكتروني
+    if (userName != null) {
+      await prefs.setString(_userNameKey, userName);
+    }
+    if (userEmail != null) {
+      await prefs.setString(_userEmailKey, userEmail);
+    }
 
     // سجل تشخيصي يوضح ما إذا كانت عملية الحفظ ناجحة
     print(
@@ -45,6 +51,18 @@ class AuthService {
   static Future<String?> getUserId() async {
     final prefs = await SharedPreferences.getInstance();
     return prefs.getString(_userIdKey);
+  }
+
+  // 3.1. 👤 دالة لجلب اسم المستخدم
+  static Future<String?> getUserName() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getString(_userNameKey);
+  }
+
+  // 3.2. 📧 دالة لجلب البريد الإلكتروني
+  static Future<String?> getUserEmail() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getString(_userEmailKey);
   }
 
   // 4. 🚪 دالة تسجيل الدخول (المصححة مع التأخير الزمني)
@@ -69,7 +87,11 @@ class AuthService {
       final userId = data['user']?['id'] as String?;
 
       if (token != null && userId != null) {
-        await _saveTokenAndUserId(token, userId);
+        // جلب اسم المستخدم والبريد الإلكتروني من الاستجابة
+        final userName = data['user']?['user_name'] as String?;
+        final userEmail = data['user']?['user_email'] as String?;
+        
+        await _saveTokenAndUserId(token, userId, userName: userName, userEmail: userEmail);
 
         // ⏳ إضافة تأخير لضمان إتمام عملية الكتابة إلى القرص
         await Future.delayed(const Duration(milliseconds: 300));
@@ -95,7 +117,9 @@ class AuthService {
     final prefs = await SharedPreferences.getInstance();
     await prefs.remove(_tokenKey);
     await prefs.remove(_userIdKey);
-    print('✅ AuthService: تم تسجيل الخروج ومسح التوكن والمعرف.');
+    await prefs.remove(_userNameKey);
+    await prefs.remove(_userEmailKey);
+    print('✅ AuthService: تم تسجيل الخروج ومسح جميع بيانات المستخدم.');
   }
 
   // 🧹 دالة مسح الذاكرة القسرية (مؤقتة للاختبار)

@@ -23,7 +23,7 @@ class Content {
     // أو في حقلين منفصلين "lat" و "lng"
     double? lat;
     double? lng;
-    
+
     if (json['lat'] != null) {
       String latString = json['lat'].toString();
       // التحقق إذا كان الحقل يحتوي على كلا الإحداثيتين
@@ -37,12 +37,17 @@ class Content {
         lat = double.tryParse(latString);
       }
     }
-    
+
     // إذا كان هناك حقل lng منفصل
     if (json['lng'] != null && lng == null) {
       lng = double.tryParse(json['lng'].toString());
     }
-    
+
+    print('🔍 تحليل JSON للمحتوى:');
+    print('   - ID: ${json['_id']}');
+    print('   - Title: ${json['title']}');
+    print('   - image_url: ${json['image_url']}');
+
     return Content(
       id: json['_id'],
       title: json['title'] ?? '',

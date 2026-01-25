@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../models/content_model.dart';
+import '../../core/utils/url_helper.dart';
 import '../../services/content_service.dart';
 import '../../services/content_details_service.dart';
 import '../landmarks/details/content_details_screen.dart';
@@ -28,16 +29,14 @@ class _AntiquitiesScreenState extends State<AntiquitiesScreen> {
   void initState() {
     super.initState();
 
-    // النوع الصحيح بدون رموز خاطئة
+    // النوع: استخدام جزء الاسم لضمان التوافق مع الاسم في قاعدة البيانات
     _contentsFuture = ContentService.fetchContents(type: 'Antiquities');
   }
 
   // لنفس الدالة المستخدمة في الممالك والمعالم
   String _resolveImageUrl(String url) {
-    // دعم Android Device
-    const String baseUrl = "http://192.168.8.134:5000";
-    if (url.startsWith('/uploads')) return baseUrl + url;
-    return url;
+    // توحيد روابط الصور عبر UrlHelper
+    return UrlHelper.fixImageUrl(url);
   }
 
   // 🔥 جلب صورة المحتوى من ContentDetails

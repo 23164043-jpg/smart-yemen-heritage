@@ -4,7 +4,7 @@ import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../services/auth_service.dart';
-import '../../home/home_screen.dart';
+import '../../navigation/main_navigation_screen.dart';
 import '../signup/signup_screen.dart';
 import '../forgot_password/forgot_password_screen.dart';
 import '../../../core/providers/settings_provider.dart';
@@ -86,7 +86,7 @@ class _LoginPageState extends State<LoginPage> {
         await Navigator.pushReplacement(
           context,
           MaterialPageRoute(
-            builder: (context) => HomeScreen(userName: userName),
+            builder: (context) => MainNavigationScreen(userName: userName),
           ),
         );
       } else {
@@ -98,6 +98,7 @@ class _LoginPageState extends State<LoginPage> {
         );
       }
     } on TimeoutException {
+      print('❌ Login Error: Timeout');
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text("انتهت مهلة الاتصال بالسيرفر"),
@@ -105,10 +106,12 @@ class _LoginPageState extends State<LoginPage> {
         ),
       );
     } catch (e) {
+      print('❌ Login Error: $e');
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text("خطأ غير متوقع في الاتصال بالسيرفر"),
+        SnackBar(
+          content: Text("خطأ في الاتصال: ${e.toString()}"),
           backgroundColor: Colors.red,
+          duration: const Duration(seconds: 5),
         ),
       );
     }

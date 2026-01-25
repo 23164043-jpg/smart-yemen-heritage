@@ -4,7 +4,7 @@ import '../../../models/content_details_model.dart';
 import '../../../services/content_details_service.dart';
 // استيراد الخدمات الجديدة (Favorites & Feedback/Auth)
 import '../../../core/services/favorites_manager.dart';
-import '../../../services/feedback_service.dart';
+import '../../../services/feedback_service.dart' as feedback;
 import '../../../services/auth_service.dart'; // 💡 استيراد AuthService
 // استيراد الشاشات الأخرى
 import '../../ar/ar_view_screen.dart';
@@ -207,7 +207,7 @@ class _ContentDetailsScreenState extends State<ContentDetailsScreen> {
       }
 
       // 2. إرسال البيانات عبر الخدمة باستخدام الـ userId الحقيقي
-      await FeedbackService.createFeedback(
+      await feedback.createFeedback(
         userId, // استخدام الـ userId الذي تم جلبه
         contentId,
         rating,
